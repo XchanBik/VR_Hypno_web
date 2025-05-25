@@ -5,7 +5,6 @@ import { useNavigationStore } from '@/store/navigation'
 import { nav, NavigationPath } from '@/navigationTree'
 
 import type { Session } from '@shared/session/types'
-import EditIcon from '@assets/edit.svg'
 
 const sessions = ref<Session[]>([])
 const loading = ref(true)
@@ -161,7 +160,7 @@ onMounted(loadSessions)
                 class="ml-4 bg-brand-200 hover:bg-brand-300 text-brand-700 rounded-full p-2 transition shadow"
                 title="Éditer"
               >
-                <img :src="EditIcon" alt="Edit" class="w-7 h-5 rounded shadow-sm" />
+                <img src="/public/edit.svg" alt="Edit" class="w-7 h-5 rounded shadow-sm" />
               </button>
             </div>
           </div>

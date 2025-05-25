@@ -10,7 +10,7 @@
     "build:client": "vite build",
     "build:electron": "tsc -p electron/tsconfig.json",
     "build": "npm run clean && npm run build:shared && npm run build:server && npm run build:client && npm run build:electron",
-    "dev": "npm run build && node build/server/server.js",
+    "dev": "node build/server/server.js",
     "electron": "npm run build && electron .",
     "start": "electron .",
     "package": "npm run build && electron-builder",

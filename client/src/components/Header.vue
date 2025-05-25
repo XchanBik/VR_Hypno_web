@@ -51,10 +51,10 @@ const navStore = useNavigationStore()
         </div>
         <div class="flex items-center space-x-2 ml-4">
           <button @click="appStore.setLocale('en')" :class="[appStore.locale === 'en' ? 'ring-2 ring-brand-400' : '', 'rounded-full p-1 transition']" title="English">
-            <img src="/assets/flag-gb.svg" alt="GB" class="w-7 h-5 rounded shadow-sm" />
+            <img src="/public/flag-gb.svg" alt="GB" class="w-7 h-5 rounded shadow-sm" />
           </button>
           <button @click="appStore.setLocale('fr')" :class="[appStore.locale === 'fr' ? 'ring-2 ring-brand-400' : '', 'rounded-full p-1 transition']" title="Français">
-            <img src="/assets/flag-gb.svg" alt="FR" class="w-7 h-5 rounded shadow-sm" />
+            <img src="/public/flag-gb.svg" alt="FR" class="w-7 h-5 rounded shadow-sm" />
           </button>
         </div>
       </div>

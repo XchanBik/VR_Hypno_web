@@ -4,7 +4,6 @@ import { t } from '@/i18n'
 import { useNavigationStore } from '@/store/navigation'
 import { nav, NavigationPath, PlaylistUidOption } from '@/navigationTree'
 import type { Playlist } from '@shared/playlist/types'
-import EditIcon from '@assets/edit.svg'
 import { formatDuration } from '@/utils/format'
 
 const playlists = ref<Playlist[]>([])
@@ -205,7 +204,7 @@ onMounted(loadPlaylists)
                     class="opacity-0 group-hover:opacity-100 bg-white/20 hover:bg-white/40 rounded-xl p-2 transition-all duration-200 border-2 border-brand-200"
                     title="Éditer"
                   >
-                    <img :src="EditIcon" alt="Edit" class="w-5 h-5" />
+                    <img src="/public/edit.svg" alt="Edit" class="w-5 h-5" />
                   </button>
                 </div>
                 <div class="flex items-center gap-2 text-sm text-white/80">

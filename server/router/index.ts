@@ -1,6 +1,7 @@
 import { Router } from 'express';
-import { createPlaylistsRouter } from '@/router/playlists';
-import { createMessageRouter } from '@/router/message';
+import { createPlaylistsRouter } from '@/router/playlist';
+import { createSessionRouter } from '@/router/session';
+import { createSongRouter } from '@/router/song';
 
 export function createMainRouter() {
   const router = Router();
@@ -22,7 +23,8 @@ export function createMainRouter() {
 
   // Routes API
   router.use('/api/playlists', createPlaylistsRouter());
-  router.use('/api/message', createMessageRouter());
+  router.use('/api/sessions', createSessionRouter());
+  router.use('/api/songs', createSongRouter());
 
   return router;
 } 

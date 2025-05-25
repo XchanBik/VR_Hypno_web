@@ -1,20 +1,16 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { join } from 'path';
 import { readdir, readFile, mkdir, writeFile } from 'fs/promises';
 import { existsSync } from 'fs';
-import { ApiResponse } from '@shared/types';
-
-// Types
-interface PlaylistInfo {
-  name: string;
-  repeat: boolean;
-  sessions: string[];
-}
-
-interface Playlist {
-  uid: string;
-  info: PlaylistInfo;
-}
+import type {
+  GetPlaylistsResponse,
+  GetPlaylistResponse,
+  CreatePlaylistRequest,
+  CreatePlaylistResponse,
+  UpdatePlaylistRequest,
+  UpdatePlaylistResponse
+} from '@shared/playlist/api';
+import type { Playlist } from '@shared/playlist/types';
 
 // Constants
 const DATA_PATH = join(process.cwd(), 'data');
@@ -41,42 +37,34 @@ async function readPlaylistInfo(playlistFile: string) {
 }
 
 // Route handlers
-async function getAllPlaylists(req: any, res: any) {
+async function getAllPlaylists(req: Request, res: Response<GetPlaylistsResponse>) {
   console.log('[playlist] GET /playlists called');
   try {
     await ensurePlaylistsDirectory();
     const entries = await readdir(PLAYLISTS_PATH, { withFileTypes: true });
     const folders = entries.filter(e => e.isDirectory());
-    const playlists = await Promise.all(
+    const playlists: Playlist[] = await Promise.all(
       folders.map(async (folder) => {
         const uid = folder.name;
         const infoPath = join(PLAYLISTS_PATH, uid, 'info.json');
         try {
           const content = await readFile(infoPath, 'utf-8');
           const info = JSON.parse(content);
-          return { uid, info };
-        } catch (e) {
-          console.warn(`[playlist] Could not read info.json for ${uid}:`, e);
+          return { uid, info } as Playlist;
+        } catch {
           return null;
         }
       })
-    );
-    const filtered = playlists.filter((playlist) => playlist !== null);
-    console.log(`[playlist] Returning ${filtered.length} playlists`);
-    res.json({
-      success: true,
-      playlists: filtered,
-    });
+    ).then((arr): Playlist[] => arr.filter((p): p is Playlist => p !== null));
+    console.log(`[playlist] Returning ${playlists.length} playlists`);
+    res.json({ success: true, data: { playlists } });
   } catch (error) {
     console.error('get-playlists error:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: (error as Error).message 
-    });
+    res.status(500).json({ success: false, error: (error as Error).message });
   }
 }
 
-async function getPlaylist(req: any, res: any) {
+async function getPlaylist(req: Request<{ uid: string }>, res: Response<GetPlaylistResponse>) {
   const { uid } = req.params;
   console.log(`[playlist] GET /playlists/${uid} called`);
   try {
@@ -84,16 +72,13 @@ async function getPlaylist(req: any, res: any) {
     const infoPath = join(PLAYLISTS_PATH, uid, 'info.json');
     const content = await readFile(infoPath, 'utf-8');
     const info = JSON.parse(content);
-    res.json({ success: true, playlist: info });
+    res.json({ success: true, data: { playlist: { uid, info } } });
   } catch (error) {
-    res.status(404).json({ 
-      success: false, 
-      error: 'Playlist not found' 
-    });
+    res.status(404).json({ success: false, error: 'Playlist not found' });
   }
 }
 
-async function createPlaylist(req: any, res: any) {
+async function createPlaylist(req: Request<{}, {}, CreatePlaylistRequest>, res: Response<CreatePlaylistResponse>) {
   try {
     const { name, repeat, sessions } = req.body;
     console.log('[playlist] POST /playlists called with:', { name, repeat, sessions });
@@ -121,10 +106,7 @@ async function createPlaylist(req: any, res: any) {
     await writeFile(infoPath, JSON.stringify(info, null, 2), 'utf-8');
     
     console.log('[playlist] Playlist created successfully:', { uid, info });
-    res.json({ 
-      success: true, 
-      playlist: { uid, info } 
-    });
+    res.json({ success: true, data: { playlist: { uid, info } } });
   } catch (error) {
     console.error('[playlist] create-playlist error:', error);
     res.status(500).json({ 
@@ -134,7 +116,7 @@ async function createPlaylist(req: any, res: any) {
   }
 }
 
-async function updatePlaylist(req: any, res: any) {
+async function updatePlaylist(req: Request<{ uid: string }, {}, UpdatePlaylistRequest>, res: Response<UpdatePlaylistResponse>) {
   try {
     const { uid } = req.params;
     const { info } = req.body;

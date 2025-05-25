@@ -2,8 +2,9 @@
 import { ref, watch, onMounted, computed } from 'vue'
 import { t } from '@/i18n'
 import { useNavigationStore } from '@/store/navigation'
-import type { SongInfo } from '@/types/song'
+import type { SongInfo } from '@shared/song/types'
 import { nav, NavigationPath } from '@/navigationTree'
+import { updateSong } from '@/apis/song'
 
 const navStore = useNavigationStore()
 const uid = computed(() => navStore.options.uid as string)
@@ -44,7 +45,7 @@ async function save() {
       uid: uid.value,
       info: JSON.parse(JSON.stringify(info.value))
     }
-    const result = await window.electronAPI?.updateSong?.(payload)
+    const result = await updateSong(payload)
     // @ts-ignore
     if (result?.success) {
       navStore.navigateTo(nav.editor.songs.list as NavigationPath)

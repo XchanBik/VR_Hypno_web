@@ -5,6 +5,7 @@ import { useNavigationStore } from '@/store/navigation'
 import { nav, NavigationPath, PlaylistUidOption } from '@/navigationTree'
 import type { Playlist } from '@shared/playlist/types'
 import { formatDuration } from '@/utils/format'
+import { getPlaylists, createPlaylist } from '@/apis/playlist'
 
 const playlists = ref<Playlist[]>([])
 const loading = ref(true)
@@ -21,10 +22,9 @@ async function loadPlaylists() {
   loading.value = true
   error.value = null
   try {
-    // @ts-ignore
-    const result = await window.electronAPI?.getPlaylists?.()
+    const result = await getPlaylists()
     if (result?.success) {
-      playlists.value = result.playlists || []
+      playlists.value = result.data.playlists || []
     } else {
       error.value = result?.error || t('unknownError')
     }
@@ -39,11 +39,12 @@ function openEditor(uid: string) {
   navStore.navigateTo(nav.player.playlist.edit as NavigationPath, { uid } as PlaylistUidOption)
 }
 
-async function createPlaylist() {
+async function createPlaylistUI() {
   if (!newPlaylistName.value.trim()) return
   creating.value = true
   try {
-    const result = await window.electronAPI?.createPlaylist?.({
+    
+    const result = await createPlaylist({
       name: newPlaylistName.value.trim(),
       repeat: false,
       sessions: []
@@ -53,7 +54,7 @@ async function createPlaylist() {
       newPlaylistRepeat.value = false
       showCreate.value = false
       await loadPlaylists()
-      navStore.navigateTo(nav.player.playlist.edit as NavigationPath, { uid: result.playlist.uid })
+      navStore.navigateTo(nav.player.playlist.edit as NavigationPath, { uid: result.data.playlist.uid })
     } else {
       error.value = result?.error || t('unknownError')
     }
@@ -133,7 +134,7 @@ onMounted(loadPlaylists)
               </div>
               <h3 class="text-xl font-extrabold text-brand-700">Nouvelle playlist</h3>
             </div>
-            <form @submit.prevent="createPlaylist" class="space-y-4">
+            <form @submit.prevent="createPlaylistUI" class="space-y-4">
               <div>
                 <label class="block text-base font-bold text-brand-700 mb-2">Nom de la playlist</label>
                 <input 

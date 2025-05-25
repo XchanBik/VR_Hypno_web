@@ -2,11 +2,14 @@
 import { ref, watch, onMounted, computed } from 'vue'
 import { t } from '@/i18n'
 import { useNavigationStore } from '@/store/navigation'
-import type { PlaylistInfo } from '@/types/playlist'
-import type { Session } from '@/types/session'
-import type { Song } from '@/types/song'
+import type { PlaylistInfo } from '@shared/playlist/types'
+import type { Session } from '@shared/session/types'
+import type { Song } from '@shared/song/types'
 import { nav, NavigationPath } from '@/navigationTree'
 import { formatDuration } from '@/utils/format'
+import { getSessions } from '@/apis/session'
+import { getSongs } from '@/apis/song'
+import { updatePlaylist } from '@/apis/playlist'
 
 const navStore = useNavigationStore()
 const uid = computed(() => navStore.options.uid as string)
@@ -30,14 +33,14 @@ async function loadSessionsAndSongs() {
   try {
     // @ts-ignore
     const [sessionResult, songResult] = await Promise.all([
-      window.electronAPI?.getSessions?.(),
-      window.electronAPI?.getSongs?.()
+      getSessions(),
+      getSongs()
     ])
     if (sessionResult?.success) {
-      allSessions.value = sessionResult.sessions || []
+      allSessions.value = sessionResult.data.sessions || []
     }
     if (songResult?.success) {
-      allSongs.value = songResult.songs || []
+      allSongs.value = songResult.data.songs || []
     }
   } catch (e) {
     console.error('Error loading sessions or songs:', e)
@@ -102,7 +105,7 @@ async function save() {
       uid: uid.value,
       info: JSON.parse(JSON.stringify(info.value))
     }
-    const result = await window.electronAPI?.updatePlaylist?.(payload)
+    const result = await updatePlaylist(payload)
     // @ts-ignore
     if (result?.success) {
       navStore.navigateTo(nav.player.playlist.list as NavigationPath)

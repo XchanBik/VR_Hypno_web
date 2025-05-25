@@ -7,6 +7,9 @@ import ThreeJSManager from '@/vr/three/ThreeJSManager'
 import type { PlaylistInfo } from '@shared/playlist/types'
 import type { SessionInfo } from '@shared/session/types'
 import type { SongInfo } from '@shared/song/types'
+import { getPlaylist } from '@/apis/playlist'
+import { getSong } from '@/apis/song'
+import { getSession } from '@/apis/session'
 
 const navStore = useNavigationStore()
 const uid = navStore.options.uid as string
@@ -24,23 +27,27 @@ async function loadAllData() {
   loading.value = true
   error.value = null
   try {
-    // @ts-ignore
-    const playlistResult = await window.electronAPI?.getPlaylist?.(uid)
-    if (!playlistResult?.success || !playlistResult.playlist || !playlistResult.playlist.sessions) {
+    const playlistResult = await getPlaylist(uid)
+    if (!playlistResult?.success || !playlistResult.data.playlist || !playlistResult.data.playlist.info.sessions) {
       throw new Error(playlistResult?.error || 'Playlist not found or missing sessions')
     }
-    playlist.value = playlistResult.playlist as PlaylistInfo
+    playlist.value = playlistResult.data.playlist.info as PlaylistInfo
     // Load all sessions
     const sessionResults = await Promise.all(
-      playlist.value!.sessions.map((sid: string) => window.electronAPI?.getSession?.(sid))
+      playlist.value!.sessions.map((sid: string) => getSession(sid))
     )
-    sessions.value = sessionResults.map(r => r.session as SessionInfo)
+    sessions.value = sessionResults.map(r => r.data.session.info as SessionInfo)
     // Load all songs
-    const songUids = [...new Set(sessions.value.map((s: SessionInfo) => s.song_uid))]
+    const songUids: string[] = []
+    for (const s of sessions.value) {
+      if (!songUids.includes(s.song_uid)) {
+        songUids.push(s.song_uid)
+      }
+    }
     const songResults = await Promise.all(
-      songUids.map((sid: string) => window.electronAPI?.getSong?.(sid))
+      songUids.map((sid: string) => getSong(sid))
     )
-    songs.value = songResults.map(r => r.song as SongInfo)
+    songs.value = songResults.map(r => r.data.song.info as SongInfo)
     loading.value = false
   } catch (e) {
     error.value = (e as Error).message

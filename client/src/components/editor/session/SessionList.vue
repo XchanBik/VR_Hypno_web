@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue'
 import { t } from '@/i18n'
 import { useNavigationStore } from '@/store/navigation'
 import { nav, NavigationPath } from '@/navigationTree'
-
+import { createSession } from '@/apis/session'
 import type { Session } from '@shared/session/types'
 
 const sessions = ref<Session[]>([])
@@ -59,7 +59,7 @@ function openEditor(uid: string) {
 async function addSession() {
   if (!newSessionName.value.trim() || !newSessionSongUid.value) return
   try {
-    const result = await window.electronAPI?.createSession?.({
+    const result = await createSession({
       info: {
         name: newSessionName.value.trim(),
         song_uid: newSessionSongUid.value

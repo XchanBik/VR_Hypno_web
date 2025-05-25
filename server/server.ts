@@ -3,7 +3,7 @@ import path from 'path';
 import { Message, ApiResponse } from '../shared/types';
 
 const app = express();
-const port = 13337;
+const port = 8481;
 
 app.use(express.json());
 

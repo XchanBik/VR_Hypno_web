@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const path_1 = __importDefault(require("path"));
 const app = (0, express_1.default)();
-const port = 13337;
+const port = 8481;
 app.use(express_1.default.json());
 // API Routes
 app.get('/api/message', (req, res) => {

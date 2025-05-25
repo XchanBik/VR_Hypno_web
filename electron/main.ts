@@ -15,7 +15,7 @@ function createWindow() {
     }
   })
 
-  mainWindow.loadURL('http://localhost:13337')
+  mainWindow.loadURL('http://localhost:8481')
 }
 
 function startServer() {

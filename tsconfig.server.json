@@ -2,9 +2,14 @@
   "extends": "./tsconfig.shared.json",
   "compilerOptions": {
     "outDir": "./build/server",
-    "rootDir": "./server"
+    "rootDir": ".",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["server/*"],
+      "@shared/*": ["shared/*"]
+    }
   },
-  "include": ["server/**/*"],
+  "include": ["server/**/*", "shared/**/*"],
   "references": [
     { "path": "./tsconfig.shared.json" }
   ]

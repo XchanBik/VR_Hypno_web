@@ -1,27 +1,22 @@
 import express from 'express';
 import path from 'path';
-import { Message, ApiResponse } from '../shared/types';
+import fs from 'fs';
+import { createMainRouter } from './router';
 
 const app = express();
 const port = 8481;
 
+// Ensure data directory exists at project root
+const dataDir = path.join(__dirname, '../../data');
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir, { recursive: true });
+}
+
+// Middleware
 app.use(express.json());
 
 // API Routes
-app.get('/api/message', (req, res) => {
-  const message: Message = {
-    id: 1,
-    content: 'Hello from the server!',
-    timestamp: new Date()
-  };
-
-  const response: ApiResponse<Message> = {
-    success: true,
-    data: message
-  };
-
-  res.json(response);
-});
+app.use(createMainRouter());
 
 // Serve static files from the frontend build
 app.use(express.static(path.join(__dirname, '../front')));

@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import { createPlaylistsRouter } from '@/router/playlist';
-import { createSessionRouter } from '@/router/session';
-import { createSongRouter } from '@/router/song';
+import { createPlaylistsRouter } from './playlist';
+import { createSessionRouter } from './session';
+import { createSongRouter } from './song';
 
 export function createMainRouter() {
   const router = Router();

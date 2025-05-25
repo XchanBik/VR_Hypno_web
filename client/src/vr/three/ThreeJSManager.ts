@@ -1,0 +1,171 @@
+/// <reference types="three" />
+import * as THREE from 'three'
+import type { PlaylistInfo } from '@shared/playlist/types'
+import type { SessionInfo } from '@shared/session/types'
+import type { SongInfo } from '@shared/song/types'
+
+interface ThreeJSManagerOptions {
+    canvas: HTMLCanvasElement
+    playlist: PlaylistInfo | null
+    sessions: SessionInfo[]
+    songs: SongInfo[]
+    vr?: boolean
+    debug?: boolean
+}
+
+export default class ThreeJSManager {
+    private canvas: HTMLCanvasElement
+    private playlist: PlaylistInfo | null
+    private sessions: SessionInfo[]
+    private songs: SongInfo[]
+    private vr: boolean
+    private renderer: THREE.WebGLRenderer
+    private scene: THREE.Scene
+    private camera: THREE.PerspectiveCamera
+    private animationId: number | null = null
+    // --- Gaze Button State ---
+    private playButton: THREE.Object3D | null = null
+    private raycaster = new THREE.Raycaster()
+    private gazeTimer = 0
+    private gazeDuration = 2 // seconds to trigger play
+    private isSessionStarted = false
+    private lastFrameTime: number | null = null
+    private isInVR = false
+    private debug: boolean
+    private frameCount = 0
+    private lastFpsTime = performance.now()
+
+  constructor(options: ThreeJSManagerOptions) {
+    this.canvas = options.canvas
+    this.playlist = options.playlist
+    this.sessions = options.sessions
+    this.songs = options.songs
+    this.vr = !!options.vr
+    this.debug = !!options.debug
+    this.scene = new THREE.Scene()
+    this.camera = new THREE.PerspectiveCamera(70, 1, 0.1, 1000)
+    this.renderer = new THREE.WebGLRenderer({ antialias: true, canvas: this.canvas })
+    this.renderer.setClearColor(0x111111)
+    this.resize()
+    if (this.vr) {
+      this.renderer.xr.enabled = true
+      // Optionally: navigator.xr.requestSession('immersive-vr')
+    }
+  }
+
+  resize() {
+    const width = this.canvas.clientWidth || 800
+    const height = this.canvas.clientHeight || 600
+    this.renderer.setSize(width, height, false)
+    this.camera.aspect = width / height
+    this.camera.updateProjectionMatrix()
+  }
+
+  init() {
+    // Basic scene setup
+    this.camera.position.set(0, 1.6, 3)
+    this.scene.add(new THREE.AmbientLight(0xffffff, 1))
+    // Add a 3D gaze play button in front of the camera
+    this.addGazePlayButton()
+    this.animate()
+  }
+
+  /**
+   * Adds a 3D play button (circle + triangle) in front of the camera.
+   */
+  private addGazePlayButton() {
+    // Circle background
+    const circleGeom = new THREE.CircleGeometry(0.25, 64)
+    const circleMat = new THREE.MeshBasicMaterial({ color: 0xff69b4 })
+    const circle = new THREE.Mesh(circleGeom, circleMat)
+    circle.position.set(0, 1.6, -2)
+    // Triangle (play icon)
+    const triShape = new THREE.Shape()
+    triShape.moveTo(-0.08, -0.12)
+    triShape.lineTo(0.14, 0)
+    triShape.lineTo(-0.08, 0.12)
+    triShape.lineTo(-0.08, -0.12)
+    const triGeom = new THREE.ShapeGeometry(triShape)
+    const triMat = new THREE.MeshBasicMaterial({ color: 0xffffff })
+    const triangle = new THREE.Mesh(triGeom, triMat)
+    triangle.position.set(0, 1.6, -1.99)
+    // Group them
+    const group = new THREE.Group()
+    group.add(circle)
+    group.add(triangle)
+    this.playButton = group
+    this.scene.add(group)
+  }
+
+  /**
+   * Main animation loop: checks gaze and triggers session start if needed.
+   */
+  animate = () => {
+    this.animationId = requestAnimationFrame(this.animate)
+    const now = performance.now()
+    let delta = 1 / 60
+    if (this.lastFrameTime !== null) {
+      delta = (now - this.lastFrameTime) / 1000
+    }
+    this.lastFrameTime = now
+    if (!this.isSessionStarted && this.playButton && this.isInVR && this.renderer.xr.isPresenting) {
+      // Raycast from camera forward
+      this.raycaster.set(this.camera.getWorldPosition(new THREE.Vector3()), this.camera.getWorldDirection(new THREE.Vector3()))
+      const intersects = this.raycaster.intersectObject(this.playButton, true)
+      if (intersects.length > 0) {
+        this.gazeTimer += delta
+        // Optionally: add a visual progress indicator
+        if (this.gazeTimer >= this.gazeDuration) {
+          this.startSession()
+        }
+      } else {
+        this.gazeTimer = 0
+      }
+    }
+    this.renderer.render(this.scene, this.camera)
+    // Debug FPS
+    if (this.debug) {
+      this.frameCount++
+      if (now - this.lastFpsTime > 1000) {
+        const fps = this.frameCount / ((now - this.lastFpsTime) / 1000)
+        console.log(`[ThreeJSManager] FPS: ${fps.toFixed(1)}`)
+        this.frameCount = 0
+        this.lastFpsTime = now
+      }
+    }
+  }
+
+  /**
+   * Placeholder: Called when gaze play is triggered.
+   */
+  private startSession() {
+    this.isSessionStarted = true
+    if (this.playButton) {
+      this.scene.remove(this.playButton)
+      this.playButton = null
+    }
+    // TODO: Start audio, session logic, etc.
+    // For now, just log
+    console.log('Session started!')
+  }
+
+  async enterVR() {
+    if (!this.vr) return
+    if (navigator.xr && this.renderer.xr) {
+      try {
+        const session = await navigator.xr.requestSession('immersive-vr')
+        await this.renderer.xr.setSession(session)
+        this.isInVR = true
+      } catch (e) {
+        this.isInVR = false
+        throw e
+      }
+    }
+  }
+
+  dispose() {
+    if (this.animationId) cancelAnimationFrame(this.animationId)
+    // No need to remove canvas, Vue manages it
+    // TODO: Dispose Three.js objects, listeners, etc.
+  }
+} 

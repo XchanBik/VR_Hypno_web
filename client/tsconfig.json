@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "baseUrl": "../",
+    "rootDir": ".",
+    "paths": {
+      "@/*": ["client/src/*"],
+      "@assets/*": ["client/assets/*"],
+      "@shared/*": ["build/shared/*"]
+    }
+  },
+  "include": ["src/**/*"]
+}

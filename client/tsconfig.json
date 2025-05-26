@@ -1,13 +1,29 @@
 {
   "compilerOptions": {
-    "target": "esnext", 
-    "baseUrl": "../",
-    "rootDir": ".",
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "jsx": "preserve",
+    "sourceMap": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "lib": ["ESNext", "DOM"],
+    "skipLibCheck": true,
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["client/src/*"],
-      "@assets/*": ["client/assets/*"],
-      "@shared/*": ["build/shared/*"]
+      "@/*": ["src/*"],
+      "@shared/*": ["../shared/*"]
     }
   },
-  "include": ["src/**/*", "postcss.config.cjs", "tailwind.config.cjs"]
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.d.ts",
+    "src/**/*.tsx",
+    "src/**/*.vue"
+  ],
+  "references": [
+    { "path": "../shared" }
+  ]
 }

@@ -9,7 +9,7 @@ import { nav, NavigationPath } from '@/navigationTree'
 import { formatDuration } from '@/utils/format'
 import { getSessions } from '@/apis/session'
 import { getSongs } from '@/apis/song'
-import { updatePlaylist } from '@/apis/playlist'
+import { updatePlaylist, getPlaylist } from '@/apis/playlist'
 
 const navStore = useNavigationStore()
 const uid = computed(() => navStore.options.uid as string)
@@ -22,7 +22,6 @@ const saveError = ref<string | null>(null)
 
 // Variables pour le popup d'ajout de session
 const showAddPopup = ref(false)
-const sessions = ref<{ uid: string; info: { name: string } }[]>([])
 const loadingSessions = ref(false)
 const selectedSession = ref('')
 const allSessions = ref<Session[]>([])
@@ -31,16 +30,15 @@ const allSongs = ref<Song[]>([])
 async function loadSessionsAndSongs() {
   loadingSessions.value = true
   try {
-    // @ts-ignore
     const [sessionResult, songResult] = await Promise.all([
       getSessions(),
       getSongs()
     ])
     if (sessionResult?.success) {
-      allSessions.value = sessionResult.data.sessions || []
+      allSessions.value = sessionResult.data?.sessions || []
     }
     if (songResult?.success) {
-      allSongs.value = songResult.data.songs || []
+      allSongs.value = songResult.data?.songs || []
     }
   } catch (e) {
     console.error('Error loading sessions or songs:', e)
@@ -70,10 +68,9 @@ async function load() {
   loading.value = true
   error.value = null
   try {
-    // @ts-ignore
-    const result = await window.electronAPI?.getPlaylist?.(uid.value)
+    const result = await getPlaylist(uid.value)
     if (result?.success) {
-      info.value = result.playlist
+      info.value = result.data?.playlist?.info as PlaylistInfo
     } else {
       error.value = result?.error || t('unknownError')
     }
@@ -106,7 +103,6 @@ async function save() {
       info: JSON.parse(JSON.stringify(info.value))
     }
     const result = await updatePlaylist(payload)
-    // @ts-ignore
     if (result?.success) {
       navStore.navigateTo(nav.player.playlist.list as NavigationPath)
     } else {

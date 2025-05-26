@@ -3,7 +3,7 @@ import { ref, onMounted, computed } from 'vue'
 import { t } from '@/i18n'
 import { useNavigationStore } from '@/store/navigation'
 import { nav, NavigationPath } from '@/navigationTree'
-
+import { getSongs, addSong } from '@/apis/song'
 import type { Song } from '@shared/song/types'
 import { formatDuration } from '@/utils/format'
 
@@ -54,10 +54,9 @@ async function loadSongs() {
   loading.value = true
   error.value = null
   try {
-    // @ts-ignore
-    const result = await window.electronAPI?.getSongs?.()
+    const result = await getSongs()
     if (result?.success) {
-      songs.value = result.songs || []
+      songs.value = result.data?.songs || []
     } else {
       error.value = result?.error || t('unknownError')
     }
@@ -72,9 +71,15 @@ function openEditor(uid: string) {
   navStore.navigateTo(nav.editor.songs.edit as NavigationPath, { uid })
 }
 
-async function addSong() {
-  // @ts-ignore
-  const result = await window.electronAPI?.addSong?.()
+async function addSongUI() {
+  const result = await addSong({
+    info: {
+      name: 'Nouvelle chanson',
+      duration: 0,
+      tags: [],
+      triggers: []
+    }
+  })
   if (result?.success) {
     await loadSongs()
   }
@@ -103,7 +108,7 @@ onMounted(loadSongs)
         </div>
       </div>
       <button 
-        @click="addSong" 
+        @click="addSongUI" 
         class="bg-gradient-to-r from-brand-500 to-brand-700 hover:from-brand-600 hover:to-brand-800 text-white rounded-2xl px-6 py-3 flex items-center gap-2 shadow-xl hover:shadow-2xl transition-all duration-200 transform hover:scale-105 text-base font-bold border-2 border-brand-200"
         :title="t('addSong')"
       >

@@ -24,7 +24,7 @@ async function loadPlaylists() {
   try {
     const result = await getPlaylists()
     if (result?.success) {
-      playlists.value = result.data.playlists || []
+      playlists.value = result.data?.playlists || []
     } else {
       error.value = result?.error || t('unknownError')
     }
@@ -54,7 +54,7 @@ async function createPlaylistUI() {
       newPlaylistRepeat.value = false
       showCreate.value = false
       await loadPlaylists()
-      navStore.navigateTo(nav.player.playlist.edit as NavigationPath, { uid: result.data.playlist.uid })
+      navStore.navigateTo(nav.player.playlist.edit as NavigationPath, { uid: result.data?.playlist?.uid })
     } else {
       error.value = result?.error || t('unknownError')
     }

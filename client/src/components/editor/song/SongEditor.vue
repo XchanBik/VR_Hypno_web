@@ -4,7 +4,7 @@ import { t } from '@/i18n'
 import { useNavigationStore } from '@/store/navigation'
 import type { SongInfo } from '@shared/song/types'
 import { nav, NavigationPath } from '@/navigationTree'
-import { updateSong } from '@/apis/song'
+import { updateSong, getSong } from '@/apis/song'
 
 const navStore = useNavigationStore()
 const uid = computed(() => navStore.options.uid as string)
@@ -22,10 +22,9 @@ async function load() {
   loading.value = true
   error.value = null
   try {
-    // @ts-ignore
-    const result = await window.electronAPI?.getSong?.(uid.value)
+    const result = await getSong(uid.value)
     if (result?.success) {
-      info.value = result.song
+      info.value = result.data?.song?.info as SongInfo
     } else {
       error.value = result?.error || t('unknownError')
     }
@@ -46,7 +45,6 @@ async function save() {
       info: JSON.parse(JSON.stringify(info.value))
     }
     const result = await updateSong(payload)
-    // @ts-ignore
     if (result?.success) {
       navStore.navigateTo(nav.editor.songs.list as NavigationPath)
     } else {

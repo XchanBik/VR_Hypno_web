@@ -28,7 +28,7 @@ async function loadAllData() {
   error.value = null
   try {
     const playlistResult = await getPlaylist(uid)
-    if (!playlistResult?.success || !playlistResult.data.playlist || !playlistResult.data.playlist.info.sessions) {
+    if (!playlistResult?.success || !playlistResult.data?.playlist || !playlistResult.data.playlist.info.sessions) {
       throw new Error(playlistResult?.error || 'Playlist not found or missing sessions')
     }
     playlist.value = playlistResult.data.playlist.info as PlaylistInfo
@@ -36,7 +36,7 @@ async function loadAllData() {
     const sessionResults = await Promise.all(
       playlist.value!.sessions.map((sid: string) => getSession(sid))
     )
-    sessions.value = sessionResults.map(r => r.data.session.info as SessionInfo)
+    sessions.value = sessionResults.map(r => r.data?.session?.info as SessionInfo)
     // Load all songs
     const songUids: string[] = []
     for (const s of sessions.value) {
@@ -47,7 +47,7 @@ async function loadAllData() {
     const songResults = await Promise.all(
       songUids.map((sid: string) => getSong(sid))
     )
-    songs.value = songResults.map(r => r.data.song.info as SongInfo)
+    songs.value = songResults.map(r => r.data?.song?.info as SongInfo)
     loading.value = false
   } catch (e) {
     error.value = (e as Error).message

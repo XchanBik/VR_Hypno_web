@@ -3,6 +3,8 @@ import { ref, onMounted } from 'vue'
 import { t } from '@/i18n'
 import { useNavigationStore } from '@/store/navigation'
 import { nav, NavigationPath } from '@/navigationTree'
+import { getSongs } from '@/apis/song'
+import { getSessions } from '@/apis/session'
 import { createSession } from '@/apis/session'
 import type { Session } from '@shared/session/types'
 
@@ -22,10 +24,9 @@ const loadingSongs = ref(false)
 async function loadSongs() {
   loadingSongs.value = true
   try {
-    // @ts-ignore
-    const result = await window.electronAPI?.getSongs?.()
+    const result = await getSongs()
     if (result?.success) {
-      songs.value = result.songs || []
+        songs.value = result.data?.songs || []
     }
   } catch (e) {
     console.error('Error loading songs:', e)
@@ -38,10 +39,9 @@ async function loadSessions() {
   loading.value = true
   error.value = null
   try {
-    // @ts-ignore
-    const result = await window.electronAPI?.getSessions?.()
+    const result = await getSessions()
     if (result?.success) {
-      sessions.value = result.sessions || []
+      sessions.value = result.data?.sessions || []
     } else {
       error.value = result?.error || t('unknownError')
     }

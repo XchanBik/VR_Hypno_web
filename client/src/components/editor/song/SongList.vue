@@ -3,7 +3,7 @@ import { ref, onMounted, computed } from 'vue'
 import { t } from '@/i18n'
 import { useNavigationStore } from '@/store/navigation'
 import { nav, NavigationPath } from '@/navigationTree'
-import { getSongs, addSong } from '@/apis/song'
+import { getSongs, addSong, uploadSongFile, deleteSong } from '@/apis/song'
 import type { Song } from '@shared/song/types'
 import { formatDuration } from '@/utils/format'
 
@@ -72,16 +72,49 @@ function openEditor(uid: string) {
 }
 
 async function addSongUI() {
-  const result = await addSong({
-    info: {
-      name: 'Nouvelle chanson',
-      duration: 0,
-      tags: [],
-      triggers: []
+  // Create a file input element
+  const input = document.createElement('input')
+  input.type = 'file'
+  input.accept = 'audio/mp3'
+  
+  input.onchange = async (e) => {
+    const file = (e.target as HTMLInputElement).files?.[0]
+    if (!file) return
+
+    // First create the song entry
+    const result = await addSong({
+      info: {
+        name: file.name.replace('.mp3', ''),
+        duration: 0, // We'll update this later
+        tags: [],
+        triggers: []
+      }
+    })
+
+    if (result?.success && result.data?.song) {
+      // Then upload the file
+      const uploadResult = await uploadSongFile(result.data.song.uid, file)
+      if (uploadResult?.success) {
+        await loadSongs()
+      }
     }
-  })
-  if (result?.success) {
-    await loadSongs()
+  }
+
+  input.click()
+}
+
+async function deleteSongUI(uid: string) {
+  if (!confirm(t('confirmDeleteSong'))) return
+  
+  try {
+    const result = await deleteSong(uid)
+    if (result?.success) {
+      await loadSongs()
+    } else {
+      error.value = result?.error || t('unknownError')
+    }
+  } catch (e) {
+    error.value = (e as Error).message
   }
 }
 
@@ -162,7 +195,16 @@ onMounted(loadSongs)
           <svg class="w-10 h-10 text-brand-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
           </svg>
-          <p class="text-brand-700 font-bold">{{ error }}</p>
+          <p class="text-brand-700 font-bold mb-4">{{ error }}</p>
+          <button 
+            @click="loadSongs" 
+            class="bg-brand-500 hover:bg-brand-600 text-white rounded-lg px-4 py-2 flex items-center gap-2 mx-auto transition-colors"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            {{ t('retry') }}
+          </button>
         </div>
         <!-- Contenu principal -->
         <div v-else>
@@ -188,13 +230,24 @@ onMounted(loadSongs)
                 <span class="block font-extrabold text-lg text-brand-700 whitespace-normal break-words min-w-[120px]">{{ song.info.name }}</span>
                 <span class="block text-xs text-brand-400 mt-1">{{ formatDuration(song.info.duration) }}</span>
               </div>
-              <button
-                @click="openEditor(song.uid)"
-                class="ml-4 bg-brand-200 hover:bg-brand-300 text-brand-700 rounded-full p-2 transition shadow"
-                title="Éditer"
-              >
-                <img src="/public/edit.svg" alt="Edit" class="w-7 h-5 rounded shadow-sm" />
-              </button>
+              <div class="flex gap-2">
+                <button
+                  @click="openEditor(song.uid)"
+                  class="bg-brand-200 hover:bg-brand-300 text-brand-700 rounded-full p-2 transition shadow"
+                  :title="t('edit')"
+                >
+                  <img src="/public/edit.svg" alt="Edit" class="w-7 h-5 rounded shadow-sm" />
+                </button>
+                <button
+                  @click="deleteSongUI(song.uid)"
+                  class="bg-red-200 hover:bg-red-300 text-red-700 rounded-full p-2 transition shadow"
+                  :title="t('delete')"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
         </div>

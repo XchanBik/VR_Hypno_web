@@ -29,6 +29,11 @@ const messages = {
     duration: 'Duration',
     tags: 'Tags',
     back: 'Back',
+    edit: 'Edit',
+    delete: 'Delete',
+    confirmDeleteSong: 'Are you sure you want to delete this song?',
+    confirmDeleteSession: 'Are you sure you want to delete this session?',
+    retry: 'Retry'
   },
   fr: {
     appTitle: 'VR Hypno',
@@ -56,6 +61,11 @@ const messages = {
     duration: 'Durée',
     tags: 'Tags',
     back: 'Retour',
+    edit: 'Éditer',
+    delete: 'Supprimer',
+    confirmDeleteSong: 'Êtes-vous sûr de vouloir supprimer cette chanson ?',
+    confirmDeleteSession: 'Êtes-vous sûr de vouloir supprimer cette session ?',
+    retry: 'Réessayer'
   }
 }
 

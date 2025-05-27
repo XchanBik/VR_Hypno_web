@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { join } from 'path';
-import { readdir, readFile, mkdir, writeFile } from 'fs/promises';
+import { readdir, readFile, mkdir, writeFile, rm } from 'fs/promises';
 import { existsSync } from 'fs';
 import type {
   GetSessionsResponse,
@@ -8,12 +8,14 @@ import type {
   CreateSessionRequest,
   CreateSessionResponse,
   UpdateSessionRequest,
-  UpdateSessionResponse
+  UpdateSessionResponse,
+  DeleteSessionResponse
 } from '@shared/session/api';
 import type { Session } from '@shared/session/types';
 
 const DATA_PATH = join(process.cwd(), 'data');
 const SESSIONS_PATH = join(DATA_PATH, 'sessions');
+const PLAYLISTS_PATH = join(DATA_PATH, 'playlists');
 
 async function ensureSessionsDirectory() {
   if (!existsSync(DATA_PATH)) {
@@ -89,11 +91,50 @@ async function updateSession(req: Request<{}, {}, UpdateSessionRequest>, res: Re
   }
 }
 
+async function deleteSession(req: Request<{ uid: string }>, res: Response<DeleteSessionResponse>) {
+  try {
+    const { uid } = req.params;
+    const sessionDir = join(SESSIONS_PATH, uid);
+
+    // Check if session exists
+    if (!existsSync(sessionDir)) {
+      return res.status(404).json({ success: false, error: 'Session not found' });
+    }
+
+    // Check if session is used in any playlist
+    const playlistEntries = await readdir(PLAYLISTS_PATH, { withFileTypes: true });
+    const playlistFolders = playlistEntries.filter(e => e.isDirectory());
+    
+    for (const folder of playlistFolders) {
+      const infoPath = join(PLAYLISTS_PATH, folder.name, 'info.json');
+      try {
+        const content = await readFile(infoPath, 'utf-8');
+        const info = JSON.parse(content);
+        if (info.sessions.includes(uid)) {
+          return res.status(400).json({ 
+            success: false, 
+            error: 'Cannot delete session: it is being used in one or more playlists' 
+          });
+        }
+      } catch {
+        continue;
+      }
+    }
+
+    // Delete the session directory
+    await rm(sessionDir, { recursive: true, force: true });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, error: (error as Error).message });
+  }
+}
+
 export function createSessionRouter() {
   const router = Router();
   router.get('/', getAllSessions);
   router.get('/:uid', getSession);
   router.post('/', createSession);
   router.put('/', updateSession);
+  router.delete('/:uid', deleteSession);
   return router;
 } 

@@ -1,19 +1,57 @@
 import { Router, Request, Response } from 'express';
 import { join } from 'path';
-import { readdir, readFile, mkdir, writeFile } from 'fs/promises';
+import { readdir, readFile, mkdir, writeFile, rm } from 'fs/promises';
 import { existsSync } from 'fs';
+import multer from 'multer';
+import { parseFile } from 'music-metadata';
 import type {
   GetSongsResponse,
   GetSongResponse,
   AddSongRequest,
   AddSongResponse,
   UpdateSongRequest,
-  UpdateSongResponse
+  UpdateSongResponse,
+  DeleteSongResponse
 } from '@shared/song/api';
-import type { Song } from '@shared/song/types';
+import type { Song, SongInfo } from '@shared/song/types';
 
 const DATA_PATH = join(process.cwd(), 'data');
 const SONGS_PATH = join(DATA_PATH, 'songs');
+const SESSIONS_PATH = join(DATA_PATH, 'sessions');
+
+// Configure multer for file upload
+const storage = multer.diskStorage({
+  destination: async (req, file, cb) => {
+    try {
+      const uid = req.params.uid;
+      const songDir = join(SONGS_PATH, uid);
+      await ensureSongsDirectory();
+      if (!existsSync(songDir)) {
+        await mkdir(songDir, { recursive: true });
+      }
+      cb(null, songDir);
+    } catch (error) {
+      cb(error as Error, '');
+    }
+  },
+  filename: (req, file, cb) => {
+    cb(null, 'audio.mp3');
+  }
+});
+
+const upload = multer({
+  storage,
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'audio/mpeg' || file.mimetype === 'audio/mp3') {
+      cb(null, true);
+    } else {
+      cb(new Error('Only MP3 files are allowed'));
+    }
+  },
+  limits: {
+    fileSize: 50 * 1024 * 1024 // 50MB limit
+  }
+});
 
 async function ensureSongsDirectory() {
   if (!existsSync(DATA_PATH)) {
@@ -29,7 +67,7 @@ async function getAllSongs(req: Request, res: Response<GetSongsResponse>) {
     await ensureSongsDirectory();
     const entries = await readdir(SONGS_PATH, { withFileTypes: true });
     const folders = entries.filter(e => e.isDirectory());
-    const songs: Song[] = await Promise.all(
+    const songs: Song[] = (await Promise.all(
       folders.map(async (folder) => {
         const uid = folder.name;
         const infoPath = join(SONGS_PATH, uid, 'info.json');
@@ -41,7 +79,9 @@ async function getAllSongs(req: Request, res: Response<GetSongsResponse>) {
           return null;
         }
       })
-    ).then((arr): Song[] => arr.filter((s): s is Song => s !== null));
+    ))
+      .filter((s): s is Song => s !== null)
+      .sort((a: Song, b: Song) => a.info.name.localeCompare(b.info.name));
     res.json({ success: true, data: { songs } });
   } catch (error) {
     res.status(500).json({ success: false, error: (error as Error).message });
@@ -64,17 +104,52 @@ async function getSong(req: Request<{ uid: string }>, res: Response<GetSongRespo
 async function addSong(req: Request<{}, {}, AddSongRequest>, res: Response<AddSongResponse>) {
   try {
     await ensureSongsDirectory();
-    // Ici, on suppose que le front envoie info: { name, duration, ... }
-    const { info } = req.body as any;
+    const { info } = req.body;
     const uid = Math.random().toString(36).slice(2, 10);
     const songDir = join(SONGS_PATH, uid);
+    
     if (!existsSync(songDir)) {
       await mkdir(songDir, { recursive: true });
     }
+
+    // Save the song info
     const infoPath = join(songDir, 'info.json');
     await writeFile(infoPath, JSON.stringify(info, null, 2), 'utf-8');
+
     res.json({ success: true, data: { song: { uid, info } } });
   } catch (error) {
+    res.status(500).json({ success: false, error: (error as Error).message });
+  }
+}
+
+// New endpoint for file upload
+async function uploadSongFile(req: Request<{ uid: string }>, res: Response) {
+  try {
+    const { uid } = req.params;
+    const songDir = join(SONGS_PATH, uid);
+    
+    if (!existsSync(songDir)) {
+      await mkdir(songDir, { recursive: true });
+    }
+
+    if (!req.file) {
+      throw new Error('No file uploaded');
+    }
+
+    // Get duration using music-metadata
+    const metadata = await parseFile(req.file.path);
+    const duration = Math.round(metadata.format.duration || 0);
+
+    // Update song info with duration
+    const infoPath = join(songDir, 'info.json');
+    const content = await readFile(infoPath, 'utf-8');
+    const info: SongInfo = JSON.parse(content);
+    info.duration = duration;
+    await writeFile(infoPath, JSON.stringify(info, null, 2), 'utf-8');
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Upload error:', error);
     res.status(500).json({ success: false, error: (error as Error).message });
   }
 }
@@ -91,11 +166,51 @@ async function updateSong(req: Request<{}, {}, UpdateSongRequest>, res: Response
   }
 }
 
+async function deleteSong(req: Request<{ uid: string }>, res: Response<DeleteSongResponse>) {
+  try {
+    const { uid } = req.params;
+    const songDir = join(SONGS_PATH, uid);
+
+    // Check if song exists
+    if (!existsSync(songDir)) {
+      return res.status(404).json({ success: false, error: 'Song not found' });
+    }
+
+    // Check if song is used in any session
+    const sessionEntries = await readdir(SESSIONS_PATH, { withFileTypes: true });
+    const sessionFolders = sessionEntries.filter(e => e.isDirectory());
+    
+    for (const folder of sessionFolders) {
+      const infoPath = join(SESSIONS_PATH, folder.name, 'info.json');
+      try {
+        const content = await readFile(infoPath, 'utf-8');
+        const info = JSON.parse(content);
+        if (info.song_uid === uid) {
+          return res.status(400).json({ 
+            success: false, 
+            error: 'Cannot delete song: it is being used in one or more sessions' 
+          });
+        }
+      } catch {
+        continue;
+      }
+    }
+
+    // Delete the song directory
+    await rm(songDir, { recursive: true, force: true });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, error: (error as Error).message });
+  }
+}
+
 export function createSongRouter() {
   const router = Router();
   router.get('/', getAllSongs);
   router.get('/:uid', getSong);
   router.post('/', addSong);
+  router.post('/:uid/upload', upload.single('audio'), uploadSongFile);
   router.put('/', updateSong);
+  router.delete('/:uid', deleteSong);
   return router;
 }

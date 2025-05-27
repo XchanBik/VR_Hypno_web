@@ -4,7 +4,7 @@ import { t } from '@/i18n'
 import { useNavigationStore } from '@/store/navigation'
 import { nav, NavigationPath } from '@/navigationTree'
 import { getSongs } from '@/apis/song'
-import { getSessions } from '@/apis/session'
+import { getSessions, deleteSession } from '@/apis/session'
 import { createSession } from '@/apis/session'
 import type { Session } from '@shared/session/types'
 
@@ -83,6 +83,21 @@ function openAddPopup() {
   loadSongs()
 }
 
+async function deleteSessionUI(uid: string) {
+  if (!confirm(t('confirmDeleteSession'))) return
+  
+  try {
+    const result = await deleteSession(uid)
+    if (result?.success) {
+      await loadSessions()
+    } else {
+      error.value = result?.error || t('unknownError')
+    }
+  } catch (e) {
+    error.value = (e as Error).message
+  }
+}
+
 onMounted(loadSessions)
 </script>
 
@@ -131,7 +146,16 @@ onMounted(loadSessions)
           <svg class="w-10 h-10 text-brand-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
           </svg>
-          <p class="text-brand-700 font-bold">{{ error }}</p>
+          <p class="text-brand-700 font-bold mb-4">{{ error }}</p>
+          <button 
+            @click="loadSessions" 
+            class="bg-brand-500 hover:bg-brand-600 text-white rounded-lg px-4 py-2 flex items-center gap-2 mx-auto transition-colors"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            {{ t('retry') }}
+          </button>
         </div>
         <div v-else>
           <!-- État vide -->
@@ -155,13 +179,24 @@ onMounted(loadSessions)
               <div class="flex flex-col flex-1 min-w-0">
                 <span class="block font-extrabold text-lg text-brand-700 whitespace-normal break-words min-w-[120px]">{{ session.info.name }}</span>
               </div>
-              <button
-                @click="openEditor(session.uid)"
-                class="ml-4 bg-brand-200 hover:bg-brand-300 text-brand-700 rounded-full p-2 transition shadow"
-                title="Éditer"
-              >
-                <img src="/public/edit.svg" alt="Edit" class="w-7 h-5 rounded shadow-sm" />
-              </button>
+              <div class="flex gap-2">
+                <button
+                  @click="openEditor(session.uid)"
+                  class="bg-brand-200 hover:bg-brand-300 text-brand-700 rounded-full p-2 transition shadow"
+                  :title="t('edit')"
+                >
+                  <img src="/public/edit.svg" alt="Edit" class="w-7 h-5 rounded shadow-sm" />
+                </button>
+                <button
+                  @click="deleteSessionUI(session.uid)"
+                  class="bg-red-200 hover:bg-red-300 text-red-700 rounded-full p-2 transition shadow"
+                  :title="t('delete')"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
         </div>

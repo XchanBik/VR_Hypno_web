@@ -4,7 +4,8 @@ import type {
   CreateSessionRequest,
   CreateSessionResponse,
   UpdateSessionRequest,
-  UpdateSessionResponse
+  UpdateSessionResponse,
+  DeleteSessionResponse
 } from '@shared/session/api'
 
 export async function getSessions(): Promise<GetSessionsResponse> {
@@ -31,6 +32,13 @@ export async function updateSession(data: UpdateSessionRequest): Promise<UpdateS
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
+  })
+  return res.json()
+}
+
+export async function deleteSession(uid: string): Promise<DeleteSessionResponse> {
+  const res = await fetch(`/api/sessions/${uid}`, {
+    method: 'DELETE'
   })
   return res.json()
 } 

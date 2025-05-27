@@ -14,6 +14,16 @@ if (!fs.existsSync(dataDir)) {
 
 // Middleware
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Error handling middleware
+app.use((err: Error, req: any, res: any, next: any) => {
+  console.error('Error:', err);
+  res.status(500).json({
+    success: false,
+    error: err.message
+  });
+});
 
 // API Routes
 app.use(createMainRouter());

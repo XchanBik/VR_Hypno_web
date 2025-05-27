@@ -31,6 +31,11 @@ app.use(createMainRouter());
 // Serve static files from the frontend build
 app.use(express.static(path.join(__dirname, '../front')));
 
+// VR Player route
+app.get('/vrplayer/:uid', (req, res) => {
+  res.sendFile(path.join(__dirname, '../front/vrplayer.html'));
+});
+
 // Fallback route for SPA
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../front/index.html'));

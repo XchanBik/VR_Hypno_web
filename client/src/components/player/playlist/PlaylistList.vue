@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { t } from '@/i18n'
+import { t } from '@/utils/i18n'
 import { useNavigationStore } from '@/store/navigation'
-import { nav, NavigationPath, PlaylistUidOption } from '@/navigationTree'
+import { nav, NavigationPath, PlaylistUidOption } from '@/utils/navigationTree'
 import type { Playlist } from '@shared/playlist/types'
 import { formatDuration } from '@/utils/format'
 import { getPlaylists, createPlaylist, deletePlaylist } from '@/apis/playlist'
@@ -38,6 +38,11 @@ async function loadPlaylists() {
 
 function openEditor(uid: string) {
   navStore.navigateTo(nav.player.playlist.edit as NavigationPath, { uid } as PlaylistUidOption)
+}
+
+function openVRPlayer(uid: string) {
+  const url = `http://localhost:8481/vrplayer/${uid}`
+  window.open(url, '_blank')
 }
 
 async function createPlaylistUI() {
@@ -253,7 +258,7 @@ onMounted(loadPlaylists)
                     {{ playlist.info.sessions.length }} session{{ playlist.info.sessions.length !== 1 ? 's' : '' }}
                   </div>
                   <button 
-                    @click="navStore.navigateTo(nav.player.playlist.player as NavigationPath, { uid: playlist.uid })"
+                    @click="openVRPlayer(playlist.uid)"
                     class="bg-gradient-to-r from-brand-500 to-brand-700 hover:from-brand-600 hover:to-brand-800 text-white rounded-full w-12 h-12 flex items-center justify-center shadow-xl hover:shadow-2xl transition-all duration-200 transform hover:scale-110 border-2 border-brand-200"
                     title="Lire"
                   >
@@ -269,4 +274,4 @@ onMounted(loadPlaylists)
       </div>
     </div>
   </div>
-</template>
+</template>@/utils/i18n@/utils/navigationTree

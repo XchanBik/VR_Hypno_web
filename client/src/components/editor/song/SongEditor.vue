@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, computed } from 'vue'
-import { t } from '@/i18n'
+import { t } from '@/utils/i18n'
 import { useNavigationStore } from '@/store/navigation'
 import type { SongInfo } from '@shared/song/types'
-import { nav, NavigationPath } from '@/navigationTree'
+import { nav, NavigationPath } from '@/utils/navigationTree'
 import { updateSong, getSong } from '@/apis/song'
 
 const navStore = useNavigationStore()
@@ -138,4 +138,4 @@ watch(uid, load)
       </div>
     </div>
   </div>
-</template> 
+</template> @/utils/i18n@/utils/navigationTree

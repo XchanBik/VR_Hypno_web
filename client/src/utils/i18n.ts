@@ -1,6 +1,6 @@
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
-import { useAppStore } from './store/app'
+import { useAppStore } from '../store/app'
 
 const messages = {
   en: {

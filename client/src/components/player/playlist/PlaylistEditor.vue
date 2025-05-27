@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, computed } from 'vue'
-import { t } from '@/i18n'
+import { t } from '@/utils/i18n'
 import { useNavigationStore } from '@/store/navigation'
 import type { PlaylistInfo } from '@shared/playlist/types'
 import type { Session } from '@shared/session/types'
 import type { Song } from '@shared/song/types'
-import { nav, NavigationPath } from '@/navigationTree'
+import { nav, NavigationPath } from '@/utils/navigationTree'
 import { formatDuration } from '@/utils/format'
 import { getSessions } from '@/apis/session'
 import { getSongs } from '@/apis/song'
@@ -217,4 +217,4 @@ watch(uid, () => {
       </div>
     </div>
   </div>
-</template> 
+</template> @/utils/i18n@/utils/navigationTree

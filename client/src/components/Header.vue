@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { t } from '../i18n'
+import { t } from '../utils/i18n'
 import { useAppStore } from '../store/app'
 import { useNavigationStore } from '@/store/navigation'
-import { nav, NavigationPath } from '@/navigationTree'
+import { nav, NavigationPath } from '@/utils/navigationTree'
 const appStore = useAppStore()
 const navStore = useNavigationStore()
 </script>
@@ -60,4 +60,4 @@ const navStore = useNavigationStore()
       </div>
     </div>
   </header>
-</template> 
+</template> ../utils/i18n@/utils/navigationTree

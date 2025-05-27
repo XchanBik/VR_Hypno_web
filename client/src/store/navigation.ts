@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
-import type { NavigationPath } from '@/navigationTree'
-import { nav } from '@/navigationTree'
+import type { NavigationPath } from '@/utils/navigationTree'
+import { nav } from '@/utils/navigationTree'
 
 export const useNavigationStore = defineStore('navigation', {
   state: () => ({

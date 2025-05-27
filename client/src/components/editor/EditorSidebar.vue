@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { navigationTree, nav, NavigationPath } from '@/navigationTree'
+import { navigationTree, nav, NavigationPath } from '@/utils/navigationTree'
 import { useNavigationStore } from '@/store/navigation'
 
 const navStore = useNavigationStore()
@@ -50,4 +50,4 @@ function selectSection(key: keyof typeof navigationTree.editor) {
 
 <style scoped>
 /* brand style accent */
-</style> 
+</style> @/utils/navigationTree

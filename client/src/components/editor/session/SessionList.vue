@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { t } from '@/i18n'
+import { t } from '@/utils/i18n'
 import { useNavigationStore } from '@/store/navigation'
-import { nav, NavigationPath } from '@/navigationTree'
+import { nav, NavigationPath } from '@/utils/navigationTree'
 import { getSongs } from '@/apis/song'
 import { getSessions, deleteSession } from '@/apis/session'
 import { createSession } from '@/apis/session'
@@ -218,4 +218,4 @@ onMounted(loadSessions)
       </div>
     </div>
   </div>
-</template>
+</template>@/utils/i18n@/utils/navigationTree

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { nextTick, ref, onMounted } from 'vue'
-import { t } from '@/i18n'
+import { t } from '@/utils/i18n'
 import { useNavigationStore } from '@/store/navigation'
-import { nav, NavigationPath } from '@/navigationTree'
+import { nav, NavigationPath } from '@/utils/navigationTree'
 import ThreeJSManager from '@/vr/three/ThreeJSManager'
 import type { PlaylistInfo } from '@shared/playlist/types'
 import type { SessionInfo } from '@shared/session/types'
@@ -99,4 +99,4 @@ onMounted(async () => {
       <canvas v-show="isInVR" ref="canvasRef" class="w-full h-full bg-black rounded-xl" />
     </div>
   </div>
-</template> 
+</template> @/player/three/ThreeJSManager@/utils/i18n@/utils/navigationTree

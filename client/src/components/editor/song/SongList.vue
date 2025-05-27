@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import { t } from '@/i18n'
+import { t } from '@/utils/i18n'
 import { useNavigationStore } from '@/store/navigation'
-import { nav, NavigationPath } from '@/navigationTree'
+import { nav, NavigationPath } from '@/utils/navigationTree'
 import { getSongs, addSong, uploadSongFile, deleteSong } from '@/apis/song'
 import type { Song } from '@shared/song/types'
 import { formatDuration } from '@/utils/format'
@@ -247,4 +247,4 @@ onMounted(loadSongs)
       </div>
     </div>
   </div>
-</template>
+</template>@/utils/i18n@/utils/navigationTree

@@ -33,7 +33,8 @@ const messages = {
     delete: 'Delete',
     confirmDeleteSong: 'Are you sure you want to delete this song?',
     confirmDeleteSession: 'Are you sure you want to delete this session?',
-    retry: 'Retry'
+    retry: 'Retry',
+    confirmDeletePlaylist: 'Are you sure you want to delete this playlist?'
   },
   fr: {
     appTitle: 'VR Hypno',
@@ -65,7 +66,8 @@ const messages = {
     delete: 'Supprimer',
     confirmDeleteSong: 'Êtes-vous sûr de vouloir supprimer cette chanson ?',
     confirmDeleteSession: 'Êtes-vous sûr de vouloir supprimer cette session ?',
-    retry: 'Réessayer'
+    retry: 'Réessayer',
+    confirmDeletePlaylist: 'Êtes-vous sûr de vouloir supprimer cette playlist ?'
   }
 }
 

@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { join } from 'path';
-import { readdir, readFile, mkdir, writeFile } from 'fs/promises';
+import { readdir, readFile, mkdir, writeFile, rm } from 'fs/promises';
 import { existsSync } from 'fs';
 import type {
   GetPlaylistsResponse,
@@ -134,6 +134,20 @@ async function updatePlaylist(req: Request<{ uid: string }, {}, UpdatePlaylistRe
   }
 }
 
+async function deletePlaylist(req: Request<{ uid: string }>, res: Response) {
+  try {
+    const { uid } = req.params;
+    const playlistDir = join(PLAYLISTS_PATH, uid);
+    if (!existsSync(playlistDir)) {
+      return res.status(404).json({ success: false, error: 'Playlist not found' });
+    }
+    await rm(playlistDir, { recursive: true, force: true });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, error: (error as Error).message });
+  }
+}
+
 // Router creation
 export function createPlaylistsRouter() {
   const router = Router();
@@ -142,6 +156,7 @@ export function createPlaylistsRouter() {
   router.get('/:uid', getPlaylist);
   router.post('/', createPlaylist);
   router.put('/:uid', updatePlaylist);
+  router.delete('/:uid', deletePlaylist);
 
   return router;
 } 

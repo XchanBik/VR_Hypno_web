@@ -34,3 +34,8 @@ import type {
     })
     return res.json()
   }
+
+  export async function deletePlaylist(uid: string): Promise<{ success: boolean; error?: string }> {
+    const res = await fetch(`/api/playlists/${uid}`, { method: 'DELETE' });
+    return res.json();
+  }

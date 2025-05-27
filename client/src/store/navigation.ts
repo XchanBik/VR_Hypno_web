@@ -12,5 +12,9 @@ export const useNavigationStore = defineStore('navigation', {
       this.path = [...path] as NavigationPath
       this.options = options ?? {}
     }
+  },
+  persist: {
+    key: 'vr-hypno-navigation-store',
+    storage: window.localStorage,
   }
 }) 

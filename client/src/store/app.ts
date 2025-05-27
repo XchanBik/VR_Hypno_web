@@ -17,5 +17,8 @@ export const useAppStore = defineStore('app', {
       this.locale = locale
     },
   },
-  persist: true,
+  persist: {
+    key: 'vr-hypno-app-store',
+    storage: window.localStorage,
+  },
 })

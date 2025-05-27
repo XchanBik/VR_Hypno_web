@@ -43,7 +43,9 @@ async function getAllSessions(req: Request, res: Response<GetSessionsResponse>) 
           return null;
         }
       })
-    ).then((arr): Session[] => arr.filter((s): s is Session => s !== null));
+    ).then((arr): Session[] => arr.filter((s): s is Session => s !== null)
+      .sort((a: Session, b: Session) => a.info.name.localeCompare(b.info.name))
+    );
     res.json({ success: true, data: { sessions } });
   } catch (error) {
     res.status(500).json({ success: false, error: (error as Error).message });

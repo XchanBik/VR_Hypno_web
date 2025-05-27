@@ -6,6 +6,7 @@ import { nav, NavigationPath, PlaylistUidOption } from '@/navigationTree'
 import type { Playlist } from '@shared/playlist/types'
 import { formatDuration } from '@/utils/format'
 import { getPlaylists, createPlaylist, deletePlaylist } from '@/apis/playlist'
+import { DeleteIcon, EditIcon, MusicIcon } from '@/icons/svg'
 
 const playlists = ref<Playlist[]>([])
 const loading = ref(true)
@@ -95,10 +96,7 @@ onMounted(loadPlaylists)
     <div class="flex items-center justify-between mb-6">
       <div class="flex items-center gap-3">
         <div class="w-12 h-12 bg-gradient-to-br from-brand-400 to-brand-600 rounded-2xl flex items-center justify-center shadow-2xl">
-          <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z"/>
-            <circle cx="20" cy="16" r="2"/>
-          </svg>
+          <span v-html="MusicIcon" class="text-white w-10 h-10 inline-flex items-center justify-center"></span>
         </div>
         <div>
           <h1 class="text-3xl font-extrabold bg-gradient-to-r from-brand-700 via-brand-500 to-brand-400 bg-clip-text text-transparent drop-shadow-brand">
@@ -194,10 +192,7 @@ onMounted(loadPlaylists)
           <!-- État vide -->
           <div v-if="playlists.length === 0 && !showCreate" class="text-center py-10">
             <div class="w-20 h-20 bg-gradient-to-br from-brand-100 to-brand-300 rounded-full flex items-center justify-center mx-auto mb-4 shadow-xl">
-              <svg class="w-10 h-10 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z"/>
-                <circle cx="20" cy="16" r="2"/>
-              </svg>
+              <span v-html="MusicIcon" class="text-pink-500 w-16 h-16 mx-auto block"></span>
             </div>
             <h3 class="text-xl font-bold text-brand-700 mb-2">{{ t('noPlaylists') }}</h3>
             <p class="text-brand-400 mb-6">Créez votre première playlist pour commencer</p>
@@ -233,16 +228,14 @@ onMounted(loadPlaylists)
                       class="bg-white/20 hover:bg-white/40 rounded-xl p-2 transition-all duration-200 border-2 border-brand-200"
                       title="Éditer"
                     >
-                      <img src="/public/edit.svg" alt="Edit" class="w-5 h-5" />
+                      <span v-html="EditIcon" class="w-10 h-10 inline-flex items-center justify-center"></span>
                     </button>
                     <button
                       @click="deletePlaylistUI(playlist.uid)"
                       class="bg-red-200 hover:bg-red-300 text-red-700 rounded-xl p-2 transition-all duration-200 border-2 border-red-400"
                       :title="t('delete')"
                     >
-                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
+                      <span v-html="DeleteIcon" class="w-10 h-10 inline-flex items-center justify-center"></span>
                     </button>
                   </div>
                 </div>

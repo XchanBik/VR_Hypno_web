@@ -3,7 +3,7 @@ import { nextTick, ref, onMounted } from 'vue'
 import { t } from '@/utils/i18n'
 import { useNavigationStore } from '@/store/navigation'
 import { nav, NavigationPath } from '@/utils/navigationTree'
-import ThreeJSManager from '@/vr/three/ThreeJSManager'
+//import ThreeJSManager from '@/vr/three/ThreeJSManager'
 import type { PlaylistInfo } from '@shared/playlist/types'
 import type { SessionInfo } from '@shared/session/types'
 import type { SongInfo } from '@shared/song/types'
@@ -19,7 +19,7 @@ const error = ref<string | null>(null)
 const playlist = ref<PlaylistInfo | null>(null)
 const sessions = ref<SessionInfo[]>([])
 const songs = ref<SongInfo[]>([])
-const threeManager = ref<InstanceType<typeof ThreeJSManager> | null>(null)
+//const threeManager = ref<InstanceType<typeof ThreeJSManager> | null>(null)
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 const isInVR = ref(false)
 
@@ -56,33 +56,8 @@ async function loadAllData() {
   console.log('loadAllData END')
 }
 
-async function onStartVR() {
-  if (threeManager.value) {
-    try {
-      await threeManager.value.enterVR()
-      isInVR.value = true
-    } catch (e) {
-      isInVR.value = false
-      alert('Could not start VR: ' + (e as Error).message)
-    }
-  }
-}
-
 onMounted(async () => {
   await loadAllData()
-  if (!error.value) {
-    await nextTick() // S'assure que le DOM est prêt
-    if (canvasRef.value) {
-      threeManager.value = new ThreeJSManager({
-        canvas: canvasRef.value,
-        playlist: playlist.value,
-        sessions: sessions.value,
-        songs: songs.value,
-        vr: true // or from flag
-      })
-      threeManager.value.init()
-    }
-  }
 })
 </script>
 
@@ -94,9 +69,5 @@ onMounted(async () => {
     </button>
     <div v-if="loading" class="text-center py-8 text-brand-400">{{ t('loading') }}</div>
     <div v-else-if="error" class="text-center py-8 text-red-500">{{ error }}</div>
-    <div v-else class="w-full h-full flex flex-col items-center justify-center">
-      <button v-if="!isInVR" @click="onStartVR" class="bg-brand-500 text-white rounded-full px-8 py-4 text-2xl font-bold shadow-lg hover:bg-brand-600 transition mb-8">Start VR</button>
-      <canvas v-show="isInVR" ref="canvasRef" class="w-full h-full bg-black rounded-xl" />
-    </div>
   </div>
 </template> @/player/three/ThreeJSManager@/utils/i18n@/utils/navigationTree

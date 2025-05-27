@@ -1,3 +1,4 @@
+/*
 import { PlaylistPlayer, type PlaylistPlayerEvents } from './PlaylistPlayer'
 import { ThreeScene, type ThreeSceneOptions } from './ThreeScene'
 import type { SessionInfo } from '@shared/session/types'
@@ -103,3 +104,4 @@ export function initVRPlayer(playlistUid: string, params: VRPlayerParams = {}) {
     antialias: params.quality !== 'low'
   }, params)
 } 
+*/

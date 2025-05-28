@@ -1,31 +1,123 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VR Player</title>
-    <!-- Vite will inject Tailwind via your build -->
-  </head>
-  <body class="bg-gray-900 text-white min-h-screen flex items-center justify-center">
-    <div id="vr-player-root" class="w-full flex flex-col items-center justify-center">
-      <!-- Error message, hidden by default -->
-      <div id="vr-error" class="hidden flex flex-col items-center justify-center">
-        <svg class="w-16 h-16 text-red-500 mb-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none"/>
-          <path stroke="currentColor" stroke-width="2" d="M15 9l-6 6M9 9l6 6"/>
-        </svg>
-        <h1 class="text-2xl font-bold mb-2">No playlist UID provided</h1>
-        <p class="text-gray-400">Please check your link or select a playlist to continue.</p>
-      </div>
-      <!-- Main VR player UI -->
-      <div id="vr-ui" class="flex flex-col items-center justify-center">
-        <canvas id="vr-canvas" class="bg-black rounded-lg shadow-lg mb-6" width="1280" height="720"></canvas>
-        <button id="vr-permission" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg text-lg font-semibold transition mb-2">
-          Request VR Permission
-        </button>
-        <div id="vr-status" class="text-gray-400 mt-2"></div>
-      </div>
+</head>
+<body class="bg-gray-900 text-white h-screen overflow-hidden">
+    <div id="vr-player-root" class="grid grid-cols-[320px_1fr] grid-rows-[1fr_80px] h-screen gap-px bg-gray-800">
+        
+        <!-- Left Sidebar - Playlist Zone -->
+        <div class="bg-gray-800 border-r border-gray-700 flex flex-col">
+            <!-- VR Permission Button -->
+            <div class="p-4 border-b border-gray-700">
+                <button id="vr-permission" class="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-lg text-white font-semibold transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl">
+                    <div class="inline w-5 h-5 mr-2">
+                        <svg class="w-full h-full" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
+                            <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    Request VR Permission
+                </button>
+            </div>
+            
+            <!-- Playlist Header -->
+            <div class="px-4 py-3">
+                <h2 id="playlist-title" class="text-lg font-bold text-gray-100">Playlist</h2>
+                <p id="playlist-count" class="text-sm text-gray-400">Loading...</p>
+            </div>
+            
+            <!-- Playlist Items -->
+            <div class="flex-1 overflow-y-auto px-4 pb-4">
+                <ul id="sessions-list" class="space-y-2">
+                    <!-- Sessions will be populated dynamically -->
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Main Canvas Zone -->
+        <div class="bg-black flex items-center justify-center p-4">
+            <div class="relative w-full h-full max-w-6xl">
+                <canvas id="vr-canvas" class="w-full h-full rounded-lg shadow-2xl bg-gray-900"></canvas>
+                
+                <!-- VR Status Overlay -->
+                <div id="vr-status" class="absolute top-4 left-4 px-3 py-1 bg-black bg-opacity-70 rounded-full text-sm text-gray-300">
+                    VR Ready
+                </div>
+                
+                <!-- Loading/Error States -->
+                <div id="vr-error" class="hidden absolute inset-0 flex flex-col items-center justify-center bg-gray-900 rounded-lg">
+                    <div class="w-16 h-16 text-red-500 mb-4">
+                        <svg class="w-full h-full" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M15 9l-6 6M9 9l6 6"/>
+                        </svg>
+                    </div>
+                    <h1 class="text-2xl font-bold mb-2">No playlist UID provided</h1>
+                    <p class="text-gray-400 text-center">Please check your link or select a playlist to continue.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Bottom Player Controls -->
+        <div class="col-span-2 bg-gray-800 border-t border-gray-700 flex items-center justify-between px-6 py-4">
+            <!-- Left: Current Track Info -->
+            <div class="flex items-center space-x-4 flex-1">
+                <div class="w-12 h-12 bg-gray-600 rounded-lg flex items-center justify-center">
+                    <div class="w-6 h-6 text-gray-300">
+                        <svg class="w-full h-full" viewBox="0 0 15 15" fill="currentColor">
+                            <path d="M13.5,1c-0.0804,0.0008-0.1594,0.0214-0.23,0.06L4.5,3.5C4.2239,3.5,4,3.7239,4,4v6.28C3.6971,10.1002,3.3522,10.0037,3,10c-1.1046,0-2,0.8954-2,2s0.8954,2,2,2s2-0.8954,2-2V7.36l8-2.22v3.64c-0.3029-0.1798-0.6478-0.2763-1-0.28c-1.1046,0-2,0.8954-2,2s0.8954,2,2,2s2-0.8954,2-2v-9C14,1.2239,13.7761,1,13.5,1z M13,4.14L5,6.36v-2l8-2.22C13,2.14,13,4.14,13,4.14z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div>
+                    <h3 id="current-session-name" class="text-sm font-medium text-white">No session selected</h3>
+                    <p id="current-session-description" class="text-xs text-gray-400">VR Experience</p>
+                </div>
+            </div>
+            
+            <!-- Center: Playback Controls -->
+            <div class="flex items-center space-x-4">
+                <button id="previous-btn" class="p-2 text-gray-400 hover:text-white transition-colors">
+                    <div class="w-5 h-5">
+                        <svg class="w-full h-full" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M8.445 14.832A1 1 0 0010 14v-4a1 1 0 00-1.555-.832L5 11.202V9a1 1 0 00-1.555-.832l-3 2a1 1 0 000 1.664l3 2A1 1 0 005 13v-2.202l3.445 2.034z"/>
+                        </svg>
+                    </div>
+                </button>
+                
+                <button id="play-pause" class="p-3 bg-blue-600 hover:bg-blue-700 rounded-full text-white transition-colors">
+                    <div class="w-6 h-6" id="play-pause-icon">
+                        <svg class="w-full h-full" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                </button>
+                
+                <button id="next-btn" class="p-2 text-gray-400 hover:text-white transition-colors">
+                    <div class="w-5 h-5">
+                        <svg class="w-full h-full" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M4.555 5.168A1 1 0 003 6v4a1 1 0 001.555.832L8 8.798V11a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2A1 1 0 009 7v2.202L4.555 5.168z"/>
+                        </svg>
+                    </div>
+                </button>
+            </div>
+            
+            <!-- Right: Settings -->
+            <div class="flex items-center space-x-4 flex-1 justify-end">
+                <button class="p-2 text-gray-400 hover:text-white transition-colors">
+                    <div class="w-5 h-5">
+                        <svg class="w-full h-full" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                </button>
+            </div>
+        </div>
     </div>
-    <script type="module" src="/src/player.ts"></script>
-  </body>
-</html> 
+    
+    <script type="module" src="src/player.ts"></script>
+</body>
+</html>

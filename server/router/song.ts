@@ -204,6 +204,41 @@ async function deleteSong(req: Request<{ uid: string }>, res: Response<DeleteSon
   }
 }
 
+// Streaming endpoint for audio
+async function streamSongFile(req: Request<{ uid: string }>, res: Response) {
+  try {
+    const { uid } = req.params;
+    const songDir = join(SONGS_PATH, uid);
+    const audioPath = join(songDir, 'audio.mp3');
+    if (!existsSync(audioPath)) {
+      return res.status(404).json({ success: false, error: 'Audio file not found' });
+    }
+    const stat = await import('fs').then(fs => fs.statSync(audioPath));
+    const range = req.headers.range;
+    if (!range) {
+      res.writeHead(200, {
+        'Content-Length': stat.size,
+        'Content-Type': 'audio/mpeg',
+      });
+      import('fs').then(fs => fs.createReadStream(audioPath).pipe(res));
+      return;
+    }
+    const parts = range.replace(/bytes=/, '').split('-');
+    const start = parseInt(parts[0], 10);
+    const end = parts[1] ? parseInt(parts[1], 10) : stat.size - 1;
+    const chunkSize = end - start + 1;
+    res.writeHead(206, {
+      'Content-Range': `bytes ${start}-${end}/${stat.size}`,
+      'Accept-Ranges': 'bytes',
+      'Content-Length': chunkSize,
+      'Content-Type': 'audio/mpeg',
+    });
+    import('fs').then(fs => fs.createReadStream(audioPath, { start, end }).pipe(res));
+  } catch (error) {
+    res.status(500).json({ success: false, error: (error as Error).message });
+  }
+}
+
 export function createSongRouter() {
   const router = Router();
   router.get('/', getAllSongs);
@@ -212,5 +247,6 @@ export function createSongRouter() {
   router.post('/:uid/upload', upload.single('audio'), uploadSongFile);
   router.put('/', updateSong);
   router.delete('/:uid', deleteSong);
+  router.get('/:uid/stream', streamSongFile);
   return router;
 }

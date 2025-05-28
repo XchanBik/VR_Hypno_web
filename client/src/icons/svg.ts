@@ -30,14 +30,18 @@ export const PauseIcon = `
 `;
 
 export const PreviousIcon = `
-  <svg class="w-full h-full" viewBox="0 0 20 20" fill="currentColor">
-    <path d="M8.445 14.832A1 1 0 0010 14v-4a1 1 0 00-1.555-.832L5 11.202V9a1 1 0 00-1.555-.832l-3 2a1 1 0 000 1.664l3 2A1 1 0 005 13v-2.202l3.445 2.034z"/>
+  <svg class="w-full h-full" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+    <path d="M11.7 12l7.1 5.1c.5.4.2 1.3-.5 1.3H16c-.2 0-.4-.1-.6-.2l-7.1-5.1c-.5-.4-.5-1.1 0-1.5l7.1-5.1c.2-.1.4-.2.6-.2h2.3c.7 0 1 .9.5 1.3L11.7 12z"/>
+    <path d="M4.7 12l7.1 5.1c.5.4.2 1.3-.5 1.3H9c-.2 0-.4-.1-.6-.2l-7.1-5.1c-.5-.4-.5-1.1 0-1.5l7.1-5.1c.2-.1.4-.2.6-.2h2.3c.7 0 1 .9.5 1.3L4.7 12z"/>
   </svg>
 `;
 
 export const NextIcon = `
-  <svg class="w-full h-full" viewBox="0 0 20 20" fill="currentColor">
-    <path d="M4.555 5.168A1 1 0 003 6v4a1 1 0 001.555.832L8 8.798V11a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2A1 1 0 009 7v2.202L4.555 5.168z"/>
+  <svg class="w-full h-full" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+    <g transform="scale(-1,1) translate(-24,0)">
+      <path d="M11.7 12l7.1 5.1c.5.4.2 1.3-.5 1.3H16c-.2 0-.4-.1-.6-.2l-7.1-5.1c-.5-.4-.5-1.1 0-1.5l7.1-5.1c.2-.1.4-.2.6-.2h2.3c.7 0 1 .9.5 1.3L11.7 12z"/>
+      <path d="M4.7 12l7.1 5.1c.5.4.2 1.3-.5 1.3H9c-.2 0-.4-.1-.6-.2l-7.1-5.1c-.5-.4-.5-1.1 0-1.5l7.1-5.1c.2-.1.4-.2.6-.2h2.3c.7 0 1 .9.5 1.3L4.7 12z"/>
+    </g>
   </svg>
 `;
 

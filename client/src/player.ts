@@ -1,9 +1,9 @@
-import './style.css'
+import './player_style.css'
 import { getPlaylist } from '@/apis/playlist'
 import { getSession } from '@/apis/session'
 import type { GetPlaylistResponse } from '@shared/playlist/api'
 import { Session } from '@shared/session/types'
-        
+
 const root = document.getElementById('vr-player-root')
 const pathParts = window.location.pathname.split('/')
 const vrplayerIndex = pathParts.indexOf('vrplayer')
@@ -15,21 +15,17 @@ let isPlaying = false
 
 function updatePlayPauseButton() {
     const playPauseIcon = document.getElementById('play-pause-icon')
-    if (playPauseIcon) {
-        if (isPlaying) {
-            playPauseIcon.innerHTML = `
-                <svg class="w-full h-full" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                </svg>
-            `
-        } else {
-            playPauseIcon.innerHTML = `
-                <svg class="w-full h-full" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>
-                </svg>
-            `
-        }
-    }
+    if (!playPauseIcon) return
+
+    playPauseIcon.innerHTML = isPlaying ? `
+        <svg class="w-full h-full" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/>
+        </svg>
+    ` : `
+        <svg class="w-full h-full" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>
+        </svg>
+    `
 }
 
 function renderSessionsList() {
@@ -72,67 +68,70 @@ function renderSessionsList() {
 
 function updateCurrentSession() {
     const currentSession = sessions[currentSessionIndex]
-    if (currentSession) {
-        const nameEl = document.getElementById('current-session-name')
-        const descEl = document.getElementById('current-session-description')
-        const statusEl = document.getElementById('vr-status')
-        
-        if (nameEl) nameEl.textContent = currentSession.info.name || 'Untitled Session'
-        if (descEl) descEl.textContent = currentSession.info.description || 'VR Experience'
-        if (statusEl) statusEl.textContent = `Session: ${currentSession.info.name || 'Untitled'}`
-    }
+    if (!currentSession) return
+
+    const nameEl = document.getElementById('current-session-name')
+    const descEl = document.getElementById('current-session-description')
+    const statusEl = document.getElementById('vr-status')
+
+    if (nameEl) nameEl.textContent = currentSession.info.name || 'Untitled Session'
+    if (descEl) descEl.textContent = currentSession.info.description || 'VR Experience'
+    if (statusEl) statusEl.textContent = `Session: ${currentSession.info.name || 'Untitled'}`
 }
 
-function runVRPlayer(root: HTMLElement, playlistUid: string | null) {
+async function fetchPlaylistAndSessions(playlistUid: string) {
+    const result = await getPlaylist(playlistUid)
+    if (!result.success || !result.data?.playlist) {
+        throw new Error(result.error || 'Failed to load playlist')
+    }
+
+    const playlist = result.data.playlist
+
+    const sessionResults = await Promise.all(
+        playlist.info.sessions.map(uid =>
+            getSession(uid)
+                .then(res => res.success && res.data?.session ? res.data.session : null)
+                .catch(err => {
+                    console.error('Session fetch error:', err)
+                    return null
+                })
+        )
+    )
+
+    sessions = sessionResults.filter(Boolean) as Session[]
+    return playlist
+}
+
+async function runVRPlayer(root: HTMLElement, playlistUid: string | null) {
     const errorDiv = document.getElementById('vr-error')
     const uiDiv = document.getElementById('vr-ui')
-    
+
     if (!playlistUid) {
         if (errorDiv) errorDiv.classList.remove('hidden')
         return
     }
 
-    // Hide error, show UI
-    if (errorDiv) errorDiv.classList.add('hidden')
+    try {
+        if (errorDiv) errorDiv.classList.add('hidden')
 
-    getPlaylist(playlistUid)
-        .then((result) => {
-            if (!result.success) throw new Error(result.error || 'Unknown error')
-            const playlist = result.data?.playlist
-            if (!playlist) throw new Error('No playlist data')
-            
-            sessions = []
+        const playlist = await fetchPlaylistAndSessions(playlistUid)
 
-            for (const session of playlist.info.sessions) {
-                getSession(session)
-                    .then((result) => {
-                        if (!result.success) throw new Error(result.error || 'Unknown error')
-                        const session = result.data?.session
-                        if (!session) throw new Error('No session data')
-                        sessions.push(session)
-                    })
-                    .catch(err => {
-                        console.error('Error fetching session:', err)
-                    })
-            }
-            
-            // Update playlist info
-            const titleEl = document.getElementById('playlist-title')
-            const countEl = document.getElementById('playlist-count')
-            
-            if (titleEl) titleEl.textContent = playlist.info.name || 'Playlist'
-            if (countEl) countEl.textContent = `${sessions.length} session${sessions.length !== 1 ? 's' : ''}`
-            
-            renderSessionsList()
-            updateCurrentSession()
-        })
-        .catch(err => {
-            const statusDiv = document.getElementById('vr-status')
-            if (statusDiv) statusDiv.textContent = 'Failed to load playlist: ' + err.message
-        })
+        // Update UI
+        const titleEl = document.getElementById('playlist-title')
+        const countEl = document.getElementById('playlist-count')
+
+        if (titleEl) titleEl.textContent = playlist.info.name || 'Playlist'
+        if (countEl) countEl.textContent = `${sessions.length} session${sessions.length !== 1 ? 's' : ''}`
+
+        renderSessionsList()
+        updateCurrentSession()
+    } catch (err: any) {
+        const statusDiv = document.getElementById('vr-status')
+        if (statusDiv) statusDiv.textContent = 'Failed to load playlist: ' + err.message
+    }
 }
 
-// Player controls
+// Player Controls
 document.getElementById('play-pause')?.addEventListener('click', () => {
     isPlaying = !isPlaying
     updatePlayPauseButton()

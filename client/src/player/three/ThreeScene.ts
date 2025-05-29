@@ -27,8 +27,9 @@ export class ThreeScene {
     const width = this.container.clientWidth
     const height = this.container.clientHeight
 
+    // Camera at typical VR eye height and distance
     this.camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000)
-    this.camera.position.z = 5
+    this.camera.position.set(0, 1.6, 3)
 
     // Create renderer without specifying canvas - Three.js will create one
     this.renderer = new WebGLRenderer({ antialias: true })
@@ -106,6 +107,8 @@ export class ThreeScene {
     const geometry = new THREE.BoxGeometry(1, 1, 1)
     const material = new THREE.MeshStandardMaterial({ color: 0x4f8cff })
     this.spinningCube = new THREE.Mesh(geometry, material)
+    // Place cube at eye height, in front of camera
+    this.spinningCube.position.set(0, 1.6, -2)
     this.scene.add(this.spinningCube)
 
     // Add ambient light if not already present

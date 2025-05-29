@@ -7,7 +7,7 @@ import { WebGLRenderer } from 'three'
 import { ThreeScene, ThreeSceneOptions } from './ThreeScene'
 
 export interface ThreeJSManagerOptions {
-  canvas: HTMLCanvasElement
+  container: HTMLElement
   background?: number
 }
 
@@ -19,7 +19,7 @@ export default class ThreeJSManager {
   public initDemoScene() {
     if (!this.threeScene) {
       this.threeScene = new ThreeScene({
-        canvas: this.options.canvas,
+        container: this.options.container,
         background: this.options.background ?? 0x181c26
       })
     }
@@ -32,5 +32,18 @@ export default class ThreeJSManager {
       this.threeScene.dispose()
       this.threeScene = null
     }
+  }
+
+  // Additional methods to access Three.js objects if needed
+  public getScene(): THREE.Scene | null {
+    return this.threeScene?.getScene() ?? null
+  }
+
+  public getCamera(): THREE.PerspectiveCamera | null {
+    return this.threeScene?.getCamera() ?? null
+  }
+
+  public getRenderer(): WebGLRenderer | null {
+    return this.threeScene?.getRenderer() ?? null
   }
 }

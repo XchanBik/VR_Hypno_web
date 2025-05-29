@@ -35,7 +35,7 @@ export default class PlayerLogic {
     this.sessions = sessions
     this.songs = songs
     // Tell ThreeJSManager to load the waiting scene
-    await this.three.showWaitingScene()
+    //await this.three.showWaitingScene()
     // Optionally preload 3D assets here
   }
 
@@ -43,7 +43,7 @@ export default class PlayerLogic {
   async play() {
     if (!this.playlist || !this.sessions.length) return
     // Ensure 3D objects are loaded
-    await this.three.startSession(this.sessions[this.currentSessionIndex])
+    //await this.three.startSession(this.sessions[this.currentSessionIndex])
     this.audio.play()
     this.isPlaying = true
   }
@@ -57,7 +57,7 @@ export default class PlayerLogic {
   /** Jump to a specific time (editor mode) */
   async jumpToTime(time: number) {
     this.audio.currentTime = time
-    await this.three.jumpToTime(time)
+    //await this.three.jumpToTime(time)
     this.currentTime = time
   }
 
@@ -65,7 +65,7 @@ export default class PlayerLogic {
   async nextSession() {
     if (this.currentSessionIndex < this.sessions.length - 1) {
       this.currentSessionIndex++
-      await this.three.startSession(this.sessions[this.currentSessionIndex])
+      // this.three.startSession(this.sessions[this.currentSessionIndex])
       this.audio.currentTime = 0
       if (this.isPlaying) this.audio.play()
     }
@@ -75,7 +75,7 @@ export default class PlayerLogic {
   async previousSession() {
     if (this.currentSessionIndex > 0) {
       this.currentSessionIndex--
-      await this.three.startSession(this.sessions[this.currentSessionIndex])
+      //await this.three.startSession(this.sessions[this.currentSessionIndex])
       this.audio.currentTime = 0
       if (this.isPlaying) this.audio.play()
     }
@@ -87,6 +87,6 @@ export default class PlayerLogic {
     this.audio.currentTime = 0
     this.currentSessionIndex = 0
     this.currentTime = 0
-    this.three.showWaitingScene()
+    //this.three.showWaitingScene()
   }
 } 

@@ -2,8 +2,8 @@ import './player_style.css'
 import { getPlaylist } from '@/apis/playlist'
 import { getSession } from '@/apis/session'
 import { Session } from '@shared/session/types'
-import { MusicIcon, NextIcon, PauseIcon, PlayIcon, PreviousIcon, SettingsIcon, SpeakerIcon, VRIcon } from './icons/svg'
-import ThreeJSManager from './player/three/ThreeJSManager'
+import { MusicIcon, NextIcon, PauseIcon, PlayIcon, PreviousIcon, SettingsIcon, SpeakerIcon, VRIcon } from '@/icons/svg'
+import ThreeJSManager from '@/player/three/ThreeJSManager'
 
 const root = document.getElementById('vr-player-root')
 const pathParts = window.location.pathname.split('/')
@@ -318,7 +318,7 @@ function renderAudioProgressBar() {
     // Add a progress bar below the controls if not present
     let bar = document.getElementById('audio-progress') as HTMLInputElement | null
     if (!bar) {
-        const controls = document.querySelector('.col-span-2.bg-gray-800.border-t')
+        const controls = document.getElementById('audio-container')
         if (controls) {
             const wrapper = document.createElement('div')
             wrapper.className = 'col-span-2 flex items-center space-x-2 px-6 pb-2'
@@ -333,16 +333,12 @@ function renderAudioProgressBar() {
 }
 
 if (root) {
+    
     setIcons()
     setupVolumeControl()
     renderAudioProgressBar()
     threeManager = new ThreeJSManager({
-        canvas: document.getElementById('vr-canvas') as HTMLCanvasElement,
-        playlist: null,
-        sessions: [],
-        songs: [],
-        vr: false,
-        debug: false
+        container: document.getElementById('canvas-container') as HTMLElement
     })
     threeManager.initDemoScene()
     runVRPlayer(root, playlistUid)

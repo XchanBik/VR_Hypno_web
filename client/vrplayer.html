@@ -1,118 +1,150 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VR Player</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VR Player</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background-color: #111827;
+      color: white;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    }
+    
+    /* Custom scrollbar for left sidebar */
+    #left ::-webkit-scrollbar {
+      width: 6px;
+    }
+    #left ::-webkit-scrollbar-track {
+      background: #374151;
+    }
+    #left ::-webkit-scrollbar-thumb {
+      background: #6B7280;
+      border-radius: 3px;
+    }
+    #left ::-webkit-scrollbar-thumb:hover {
+      background: #9CA3AF;
+    }
+  </style>
 </head>
-<body class="bg-gray-900 text-white h-screen overflow-hidden">
-    <div id="vr-player-root" class="grid grid-cols-[320px_1fr] grid-rows-[1fr_80px] h-screen gap-px bg-gray-800">
+<body id="vr-player-root">
+  <!-- Left Sidebar - Fixed positioned, will be sized by layout() -->
+  <div id="left" class="bg-gray-800 border-r border-gray-700">
+    <!-- VR Permission Section -->
+    <div class="p-4 border-b border-gray-700">
+      <button class="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-lg text-white font-semibold transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl">
+        <div class="items-center space-x-3" style="display: flex;">
+          <div class="w-8 h-8 rounded items-center justify-center" style="display: flex;">
+            <div id="vr-permission-icon" class="w-6 h-6 text-gray-300">
+            </div>
+          </div>
+          <div class="text-left" style="flex: 1;">
+            <h3 class="text-sm font-medium">Request VR Permission</h3>
+          </div>
+        </div>
+      </button>
+    </div>
+
+    <!-- Playlist Header -->
+    <div class="px-4 py-3">
+      <h2 id="playlist-title" class="text-lg font-bold text-gray-100">Playlist</h2>
+      <p id="playlist-count" class="text-sm text-gray-400">Loading...</p>
+    </div>
+
+    <!-- Sessions List - Scrollable -->
+    <div class="overflow-y-auto px-4 pb-4" style="position: absolute; top: 120px; bottom: 0; left: 0; right: 0;">
+      <ul id="sessions-list" class="space-y-2">
+      </ul>
+    </div>
+  </div>
+
+  <!-- Main Canvas Area - Fixed positioned, will be sized by layout() -->
+  <div id="middle" class="bg-gray-900 items-center justify-center" style="display: flex;">
+    <div class="relative w-full h-full">
+      <div id="canvas-container" class="w-full h-full bg-gray-900 overflow-hidden relative">
+        <canvas id="three-canvas" class="absolute inset-0 w-full h-full"></canvas>
         
-        <!-- Left Sidebar - Playlist Zone -->
-        <div class="bg-gray-800 border-r border-gray-700 flex flex-col">
+        <!-- VR Status Indicator -->
+        <div id="vr-status" class="absolute top-4 left-4 px-3 py-1 bg-black bg-opacity-70 rounded-full text-sm text-gray-300 backdrop-blur-sm">
+          VR Ready
+        </div>
+
+        <!-- VR Error State -->
+        <div id="vr-error" class="hidden absolute inset-0 items-center justify-center bg-gray-900" style="display: none; flex-direction: column;">
+          <div class="w-16 h-16 text-red-500 mb-4">
             
-            <div class="p-4 border-b border-gray-700">
-                <!-- VR Permission Button -->            
-                <div class="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-lg text-white font-semibold transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl">        
-                    <div class="flex items-center space-x-3">
-                        <div class="w-12 h-8 rounded flex items-center justify-center">
-                            <div class="w-8 h-8 text-gray-300" id="vr-permission-icon">
-                            </div>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <h3 class="text-sm font-medium text-white truncate">Request VR Permission</h3>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Playlist Header -->
-            <div class="px-4 py-3">
-                <h2 id="playlist-title" class="text-lg font-bold text-gray-100">Playlist</h2>
-                <p id="playlist-count" class="text-sm text-gray-400">Loading...</p>
-            </div>
-            
-            <!-- Playlist Items -->
-            <div class="flex-1 overflow-y-auto px-4 pb-4">
-                <ul id="sessions-list" class="space-y-2">
-                    <!-- Sessions will be populated dynamically -->
-                </ul>
+          </div>
+          <h1 class="text-2xl font-bold mb-2 text-white">No playlist UID provided</h1>
+          <p class="text-gray-400 text-center">Please check your link or select a playlist to continue.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Player Controls - Fixed positioned, will be sized by layout() -->
+  <div id="bottom" class="bg-gray-800 border-t border-gray-700 px-6 py-4 items-center justify-between">
+    <div id="audio-container" class="h-8 w-full">
+    </div>
+    <div id="session-info-container" style="display: flex;">
+        <!-- Current Session Info -->
+        <div class="items-center space-x-4" style="display: flex; flex: 1;">
+        <div class="w-12 h-12 bg-gray-600 rounded-lg items-center justify-center" style="display: flex; flex-shrink: 0;">
+            <div id="current-session-icon" class="w-6 h-6 text-gray-300">
             </div>
         </div>
-        
-        <!-- Main Canvas Zone -->
-        <div class="bg-black flex items-center justify-center p-4">
-            <div class="relative w-full h-full max-w-6xl">
-                <canvas id="vr-canvas" class="w-full h-full rounded-lg shadow-2xl bg-gray-900"></canvas>
-                
-                <!-- VR Status Overlay -->
-                <div id="vr-status" class="absolute top-4 left-4 px-3 py-1 bg-black bg-opacity-70 rounded-full text-sm text-gray-300">
-                    VR Ready
-                </div>
-                
-                <!-- Loading/Error States -->
-                <div id="vr-error" class="hidden absolute inset-0 flex flex-col items-center justify-center bg-gray-900 rounded-lg">
-                    <div class="w-16 h-16 text-red-500 mb-4">
-                        <svg class="w-full h-full" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="10"/>
-                            <path d="M15 9l-6 6M9 9l6 6"/>
-                        </svg>
-                    </div>
-                    <h1 class="text-2xl font-bold mb-2">No playlist UID provided</h1>
-                    <p class="text-gray-400 text-center">Please check your link or select a playlist to continue.</p>
-                </div>
+        <div class="min-w-0" style="flex: 1;">
+            <h3 id="current-session-name" class="text-sm font-medium text-white truncate">No session selected</h3>
+            <p id="current-session-description" class="text-xs text-gray-400 truncate">VR Experience</p>
+        </div>
+        </div>
+
+        <!-- Playback Controls -->
+        <div class="items-center space-x-4" style="display: flex; flex-shrink: 0;">
+        <button id="previous-btn" class="p-2 text-gray-400 hover:text-white transition-colors rounded-full hover:bg-gray-700">
+            <div id="previous-icon" class="w-6 h-6">
             </div>
+        </button>
+
+        <button id="play-pause" class="p-3 bg-blue-600 hover:bg-blue-700 rounded-full text-white transition-colors">
+            <div id="play-pause-icon" class="w-6 h-6">
+            </div>
+        </button>
+
+        <button id="next-btn" class="p-2 text-gray-400 hover:text-white transition-colors rounded-full hover:bg-gray-700">
+            <div id="next-icon" class="w-6 h-6">
+            </div>
+        </button>
+        </div>
+
+        <!-- Volume and Settings -->
+        <div class="items-center space-x-4 justify-end" style="display: flex; flex: 1;">
+        <div class="items-center space-x-2" style="display: flex;">
+            <span id="volume-icon" class="w-6 h-6 text-gray-400 items-center justify-center" style="display: flex;">
+            </span>
+            <input 
+            id="audio-volume" 
+            type="range" 
+            min="0" 
+            max="1" 
+            step="0.01" 
+            value="1" 
+            class="w-24 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+            style="background: linear-gradient(to right, #3B82F6 0%, #3B82F6 100%, #374151 100%, #374151 100%);"
+            >
         </div>
         
-        <!-- Bottom Player Controls -->
-        <div class="col-span-2 bg-gray-800 border-t border-gray-700 flex items-center justify-between px-6 py-4">
-            <!-- Left: Current Track Info -->
-            <div class="flex items-center space-x-4 flex-1">
-                <div class="w-12 h-12 bg-gray-600 rounded-lg flex items-center justify-center">
-                    <div class="w-6 h-6 text-gray-300" id="current-session-icon"> 
-                    </div>
-                </div>
-                <div>
-                    <h3 id="current-session-name" class="text-sm font-medium text-white">No session selected</h3>
-                    <p id="current-session-description" class="text-xs text-gray-400">VR Experience</p>
-                </div>
+        <button class="p-2 text-gray-400 hover:text-white transition-colors rounded-full hover:bg-gray-700">
+            <div id="settings-icon" class="w-6 h-6">
             </div>
-            
-            <!-- Center: Playback Controls -->
-            <div class="flex items-center space-x-4">
-                <button id="previous-btn" class="p-2 text-gray-400 hover:text-white transition-colors">
-                    <div class="w-8 h-8" id="previous-icon">
-                    </div>
-                </button>
-                
-                <button id="play-pause" class="p-1 bg-blue-600 hover:bg-blue-700 rounded-full text-white transition-colors">
-                    <div class="w-8 h-8" id="play-pause-icon">
-                    </div>
-                </button>
-                
-                <button id="next-btn" class="p-2 text-gray-400 hover:text-white transition-colors">
-                    <div class="w-8 h-8" id="next-icon">
-                    </div>
-                </button>
-                <!-- Volume Control -->
-                <div class="flex items-center space-x-2 ml-4">
-                    <span id="volume-icon" class="w-6 h-6 text-gray-400 flex items-center justify-center">
-                        <!-- Speaker SVG will be injected by JS -->
-                    </span>
-                    <input id="audio-volume" type="range" min="0" max="1" step="0.01" value="1" class="w-24 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
-                </div>
-            </div>
-            
-            <!-- Right: Settings -->
-            <div class="flex items-center space-x-4 flex-1 justify-end">
-                <button class="p-2 text-gray-400 hover:text-white transition-colors">
-                    <div class="w-8 h-8" id="settings-icon">
-                    </div>
-                </button>
-            </div>
+        </button>
         </div>
     </div>
-    
-    <script type="module" src="src/player.ts"></script>
+  </div>
+
+  <script type="module" src="src/player.ts"></script>
+  <script type="module" src="src/player/LayoutControler.ts"></script>
 </body>
 </html>

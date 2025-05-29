@@ -17,8 +17,8 @@ function layout() {
     
     if (isMobile) {
       // Mobile layout - hide left sidebar, make bottom 40%
-      const topHeight = h * 0.7;
-      const bottomHeight = h * 0.3;
+      const topHeight = h * 0.75;
+      const bottomHeight = h * 0.25;
       
       // Hide left sidebar
       left.style.position = 'fixed';
@@ -44,8 +44,8 @@ function layout() {
     } else {
       // Desktop layout - original layout
       const leftWidth = w * 0.2;
-      const topHeight = h * 0.8;
-      const bottomHeight = h * 0.2;
+      const topHeight = h * 0.85;
+      const bottomHeight = h * 0.15;
       
       // Show left sidebar
       left.style.display = 'flex';

@@ -88,53 +88,51 @@
   <div id="bottom" class="bg-gray-800 border-t border-gray-700 px-6 py-4" style="display: flex; flex-direction: column; justify-content: space-between;">
     <div id="audio-container" class="h-8 w-full mb-4">
     </div>
-    
-    <!-- Current Session Info - Top of controls -->
-    <div class="items-center space-x-4 mb-4" style="display: flex;">
-      <div class="w-12 h-12 bg-gray-600 rounded-lg items-center justify-center" style="display: flex; flex-shrink: 0;">
-        <div id="current-session-icon" class="w-6 h-6 text-gray-300">
+    <!-- Responsive wrapper for session info and controls -->
+    <div class="flex flex-col md:flex-row md:items-center md:space-x-6 w-full">
+      <!-- Current Session Info -->
+      <div class="flex items-center space-x-4 mb-4 md:mb-0">
+        <div class="w-12 h-12 bg-gray-600 rounded-lg items-center justify-center" style="display: flex; flex-shrink: 0;">
+          <div id="current-session-icon" class="w-6 h-6 text-gray-300">
+          </div>
+        </div>
+        <div class="min-w-0" style="flex: 1;">
+          <h3 id="current-session-name" class="text-sm font-medium text-white truncate">No session selected</h3>
+          <p id="current-session-description" class="text-xs text-gray-400 truncate">VR Experience</p>
         </div>
       </div>
-      <div class="min-w-0" style="flex: 1;">
-        <h3 id="current-session-name" class="text-sm font-medium text-white truncate">No session selected</h3>
-        <p id="current-session-description" class="text-xs text-gray-400 truncate">VR Experience</p>
-      </div>
-    </div>
-
-    <!-- Control Bar -->
-    <div style="display: flex; align-items: center; justify-content: space-between;">
-      <!-- Left: Previous Button -->
-      <button id="previous-btn" class="p-2 text-gray-400 hover:text-white transition-colors rounded-full hover:bg-gray-700">
-        <div id="previous-icon" class="w-6 h-6">
+      <!-- Control Bar -->
+      <div class="flex items-center justify-between flex-1">
+        <!-- Left: Previous Button -->
+        <button id="previous-btn" class="p-2 text-gray-400 hover:text-white transition-colors rounded-full hover:bg-gray-700">
+          <div id="previous-icon" class="w-6 h-6">
+          </div>
+        </button>
+        <!-- Center: Play/Pause -->
+        <button id="play-pause" class="p-3 bg-blue-600 hover:bg-blue-700 rounded-full text-white transition-colors mx-4">
+          <div id="play-pause-icon" class="w-6 h-6">
+          </div>
+        </button>
+        <!-- Right: Next Button -->
+        <button id="next-btn" class="p-2 text-gray-400 hover:text-white transition-colors rounded-full hover:bg-gray-700">
+          <div id="next-icon" class="w-6 h-6">
+          </div>
+        </button>
+        <!-- Volume Control -->
+        <div class="items-center space-x-2 ml-6" style="display: flex;">
+          <span id="volume-icon" class="w-6 h-6 text-gray-400 items-center justify-center" style="display: flex;">
+          </span>
+          <input 
+            id="audio-volume" 
+            type="range" 
+            min="0" 
+            max="1" 
+            step="0.01" 
+            value="1" 
+            class="w-24 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+            style="background: linear-gradient(to right, #3B82F6 0%, #3B82F6 100%, #374151 100%, #374151 100%);"
+          >
         </div>
-      </button>
-
-      <!-- Center: Play/Pause -->
-      <button id="play-pause" class="p-3 bg-blue-600 hover:bg-blue-700 rounded-full text-white transition-colors mx-4">
-        <div id="play-pause-icon" class="w-6 h-6">
-        </div>
-      </button>
-
-      <!-- Right: Next Button -->
-      <button id="next-btn" class="p-2 text-gray-400 hover:text-white transition-colors rounded-full hover:bg-gray-700">
-        <div id="next-icon" class="w-6 h-6">
-        </div>
-      </button>
-
-      <!-- Volume Control -->
-      <div class="items-center space-x-2 ml-6" style="display: flex;">
-        <span id="volume-icon" class="w-6 h-6 text-gray-400 items-center justify-center" style="display: flex;">
-        </span>
-        <input 
-          id="audio-volume" 
-          type="range" 
-          min="0" 
-          max="1" 
-          step="0.01" 
-          value="1" 
-          class="w-24 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
-          style="background: linear-gradient(to right, #3B82F6 0%, #3B82F6 100%, #374151 100%, #374151 100%);"
-        >
       </div>
     </div>
   </div>

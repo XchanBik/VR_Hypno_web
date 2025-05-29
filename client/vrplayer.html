@@ -94,6 +94,13 @@
                     <div class="w-8 h-8" id="next-icon">
                     </div>
                 </button>
+                <!-- Volume Control -->
+                <div class="flex items-center space-x-2 ml-4">
+                    <span id="volume-icon" class="w-6 h-6 text-gray-400 flex items-center justify-center">
+                        <!-- Speaker SVG will be injected by JS -->
+                    </span>
+                    <input id="audio-volume" type="range" min="0" max="1" step="0.01" value="1" class="w-24 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                </div>
             </div>
             
             <!-- Right: Settings -->

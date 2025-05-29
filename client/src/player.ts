@@ -2,7 +2,7 @@ import './player_style.css'
 import { getPlaylist } from '@/apis/playlist'
 import { getSession } from '@/apis/session'
 import { Session } from '@shared/session/types'
-import { MusicIcon, NextIcon, PauseIcon, PlayIcon, PreviousIcon, SettingsIcon, VRIcon } from './icons/svg'
+import { MusicIcon, NextIcon, PauseIcon, PlayIcon, PreviousIcon, SettingsIcon, SpeakerIcon, VRIcon } from './icons/svg'
 
 const root = document.getElementById('vr-player-root')
 const pathParts = window.location.pathname.split('/')
@@ -249,6 +249,27 @@ function setIcons() {
     if (sessionIcon) {
         sessionIcon.innerHTML = MusicIcon
     }
+
+    // Volume icon (simple speaker SVG)
+    const volumeIcon = document.getElementById('volume-icon')
+    if (volumeIcon) {
+        volumeIcon.innerHTML = SpeakerIcon
+    }
+}
+
+function setupVolumeControl() {
+    const volumeSlider = document.getElementById('audio-volume') as HTMLInputElement | null
+    setupAudioElement()
+    if (volumeSlider && audio) {
+        // Set initial value
+        volumeSlider.value = audio.volume.toString()
+        // Update audio volume on slider change
+        volumeSlider.addEventListener('input', () => {
+            if (audio) {
+                audio.volume = parseFloat(volumeSlider.value)
+            }
+        })
+    }
 }
 
 function renderAudioProgressBar() {
@@ -258,7 +279,7 @@ function renderAudioProgressBar() {
         const controls = document.querySelector('.col-span-2.bg-gray-800.border-t')
         if (controls) {
             const wrapper = document.createElement('div')
-            wrapper.className = 'w-full flex items-center space-x-2 px-6 pb-2'
+            wrapper.className = 'col-span-2 flex items-center space-x-2 px-6 pb-2'
             wrapper.innerHTML = `
                 <span id="audio-current" class="text-xs text-gray-400">0:00</span>
                 <input id="audio-progress" type="range" min="0" max="1" value="0" step="0.01" class="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
@@ -271,6 +292,7 @@ function renderAudioProgressBar() {
 
 if (root) {
     setIcons()
+    setupVolumeControl()
     renderAudioProgressBar()
     runVRPlayer(root, playlistUid)
 }

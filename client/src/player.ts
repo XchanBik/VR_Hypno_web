@@ -115,11 +115,10 @@ function renderSessionsList() {
     if (!sessionsList) return
     sessionsList.innerHTML = sessions.map((session, index) => `
         <li class="playlist-item">
-            <button class="w-full p-3 rounded-lg cursor-pointer transition-colors border-l-3 text-left ${
-                index === currentSessionIndex 
-                    ? 'bg-gray-600 border-blue-500' 
-                    : 'bg-gray-700 hover:bg-gray-600 border-transparent hover:border-blue-400'
-            }" data-index="${index}">
+            <button class="w-full p-3 rounded-lg cursor-pointer transition-colors border-l-3 text-left ${index === currentSessionIndex
+            ? 'bg-gray-600 border-blue-500'
+            : 'bg-gray-700 hover:bg-gray-600 border-transparent hover:border-blue-400'
+        }" data-index="${index}">
                 <div class="flex items-center space-x-3">
                     <div class="w-12 h-8 bg-gray-600 rounded flex items-center justify-center">
                         <div class="w-4 h-4 text-gray-300" id="session-icon">
@@ -332,8 +331,21 @@ function renderAudioProgressBar() {
     }
 }
 
+function initVrButton() {
+    // Add a progress bar below the controls if not present
+    let btn = document.getElementById('request-vr-permission') as HTMLInputElement | null
+    if (btn) {
+        btn.addEventListener('click', async () => {
+            try {
+                await threeManager?.enterVR()
+            } catch (err) {
+                alert('Failed to enter VR: ' + ((err && (err as any).message) ? (err as any).message : err))
+            }
+        })
+    }
+}
+
 if (root) {
-    
     setIcons()
     setupVolumeControl()
     renderAudioProgressBar()
@@ -341,5 +353,6 @@ if (root) {
         container: document.getElementById('canvas-container') as HTMLElement
     })
     threeManager.initDemoScene()
+    initVrButton()
     runVRPlayer(root, playlistUid)
 }

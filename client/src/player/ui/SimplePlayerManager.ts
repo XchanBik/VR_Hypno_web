@@ -6,7 +6,7 @@ import { XRStateListener } from "@/player/three/XRManager";
 import { getPlaylist } from '@/apis/playlist'
 import { getSession } from '@/apis/session'
 
-export default class PlayerManager implements XRStateListener {
+export default class SimplePlayerManager implements XRStateListener {
 
     //Player
     private container: HTMLElement | null = null;
@@ -79,7 +79,7 @@ export default class PlayerManager implements XRStateListener {
         const progressBar = document.getElementById('audio-progress') as HTMLInputElement | null
         const volumeSlider = document.getElementById('audio-volume') as HTMLInputElement | null
         if (!audio || !progressBar || !volumeSlider) {
-            throw new Error('Audio or progress bar not found')
+            throw new Error('(setAudio) Audio or progress bar not found')
         }
         this.audioManager = new AudioManager(audio, progressBar, volumeSlider)
 
@@ -90,8 +90,8 @@ export default class PlayerManager implements XRStateListener {
         }
         this.audioManager.setProgressTime(progressTime)
         this.audioManager.setProgressDuration(progressDuration)
-        this.audioManager.onStateChange = this.handleAudioStateChange
-        this.audioManager.onAudioEnded = this.handleAudioEnded
+        this.audioManager.onStateChange = (isPlaying: boolean) => this.handleAudioStateChange(isPlaying)
+        this.audioManager.onAudioEnded = () => this.handleAudioEnded()
     }
 
     //Events Handlers
@@ -196,9 +196,9 @@ export default class PlayerManager implements XRStateListener {
         if (!this.playPauseIcon || !this.previousIcon || !this.nextIcon || !this.vrButton || !this.sessionsList) {
             throw new Error('some buttons not found')
         }
-        this.playPauseIcon.addEventListener('click', this.handlePlayPauseClick)
-        this.nextIcon.addEventListener('click', this.handleNextIconClick)
-        this.previousIcon.addEventListener('click', this.handlePreviousIconClick)
+        this.playPauseIcon.addEventListener('click', () => this.handlePlayPauseClick())
+        this.nextIcon.addEventListener('click', () => this.handleNextIconClick())
+        this.previousIcon.addEventListener('click', () => this.handlePreviousIconClick())
     }
 
     private setSessionsListEvents() {

@@ -1,17 +1,26 @@
 import './player_style.css'
-import PlayerManager from '@/player/ui/PlayerManager';
+import SimplePlayerManager from '@/player/ui/SimplePlayerManager';
 
-const root = document.getElementById('vr-player-root')
 const pathParts = window.location.pathname.split('/')
 const vrplayerIndex = pathParts.indexOf('vrplayer')
 const playlistUid = vrplayerIndex !== -1 && pathParts[vrplayerIndex + 1] ? pathParts[vrplayerIndex + 1] : null
 
-if (root && playlistUid) {
-    const playerManager = new PlayerManager();
+
+async function initPlayer(playlistUid: string) {
+    const playerManager = new SimplePlayerManager();
     playerManager.init();
     await playerManager.readPlaylist(playlistUid);
 }
 
+
+document.addEventListener('DOMContentLoaded', () => {
+    const root = document.getElementById('vr-player-root');
+    if (root && playlistUid) {
+        initPlayer(playlistUid).catch(error => {
+            console.error('Failed to initialize player:', error);
+        });
+    }
+})
 /*
 
 async function runVRPlayer(root: HTMLElement, playlistUid: string | null) {

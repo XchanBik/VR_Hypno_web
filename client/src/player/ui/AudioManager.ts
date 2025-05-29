@@ -19,6 +19,8 @@ export default class AudioManager {
         this.progressBar = progressBar;
         this.volumeSlider = volumeSlider;
 
+        console.log('AudioManager constructor', this.audio, this.progressBar, this.volumeSlider)
+
         this.setEvents();
     }
     
@@ -56,11 +58,11 @@ export default class AudioManager {
     }
 
     private setEvents() {
-        this.audio.ontimeupdate = this.updateProgressBar;
-        this.audio.onloadedmetadata = this.updateProgressBar;
-        this.audio.onended = this.handleAudioEnded;
-        this.progressBar.addEventListener('input', this.onProgessBarSeek)
-        this.volumeSlider.addEventListener('input', this.onVolumeInput)
+        this.audio.ontimeupdate = () => this.updateProgressBar();
+        this.audio.onloadedmetadata = () => this.updateProgressBar();
+        this.audio.onended = () => this.handleAudioEnded();
+        this.progressBar.addEventListener('input', () => this.onProgessBarSeek())
+        this.volumeSlider.addEventListener('input', () => this.onVolumeInput())
     }
     
     //EventsHandlers

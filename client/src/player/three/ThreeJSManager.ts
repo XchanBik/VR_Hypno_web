@@ -37,6 +37,9 @@ export default class ThreeJSManager {
     private frameCount = 0
     private lastFpsTime = performance.now()
     private threeScene: ThreeScene | null = null
+    private lastCanvasWidth: number = 0
+    private lastCanvasHeight: number = 0
+    private resizeObserver: ResizeObserver | null = null
 
   constructor(options: ThreeJSManagerOptions) {
     this.canvas = options.canvas
@@ -49,19 +52,83 @@ export default class ThreeJSManager {
     this.camera = new THREE.PerspectiveCamera(70, 1, 0.1, 1000)
     this.renderer = new THREE.WebGLRenderer({ antialias: true, canvas: this.canvas })
     this.renderer.setClearColor(0x111111)
-    this.resize()
+    
+    // CRITICAL: Lock canvas CSS size to prevent Three.js from interfering
+    this.lockCanvasSize()
+    this.setupTailwindFriendlyResize()
+    
     if (this.vr) {
       this.renderer.xr.enabled = true
       // Optionally: navigator.xr.requestSession('immersive-vr')
     }
   }
 
-  resize() {
-    const width = this.canvas.clientWidth || 800
-    const height = this.canvas.clientHeight || 600
-    this.renderer.setSize(width, height, false)
+  /**
+   * Lock canvas CSS size and remove dimension attributes - let Tailwind control sizing
+   */
+  private lockCanvasSize() {
+    // LOCK the canvas CSS size - Tailwind controls this, not Three.js
+    this.canvas.style.width = '100%'
+    this.canvas.style.height = '100%'
+    this.canvas.removeAttribute('width')
+    this.canvas.removeAttribute('height')
+  }
+
+  /**
+   * Setup resize handling that works with Tailwind CSS
+   */
+  private setupTailwindFriendlyResize() {
+    // Watch for canvas size changes using ResizeObserver
+    this.resizeObserver = new ResizeObserver(() => {
+      this.updateInternalRenderSize()
+    })
+    
+    this.resizeObserver.observe(this.canvas)
+    
+    // Set initial size
+    this.updateInternalRenderSize()
+  }
+
+  /**
+   * Update Three.js internal rendering size WITHOUT touching canvas DOM size
+   */
+  private updateInternalRenderSize() {
+    const rect = this.canvas.getBoundingClientRect()
+    const width = rect.width
+    const height = rect.height
+    
+    // Skip if no change
+    if (width === this.lastCanvasWidth && height === this.lastCanvasHeight) {
+      return
+    }
+    
+    this.lastCanvasWidth = width
+    this.lastCanvasHeight = height
+    
+    // Update camera aspect ratio
     this.camera.aspect = width / height
     this.camera.updateProjectionMatrix()
+    
+    // Update internal rendering resolution WITHOUT touching canvas DOM size
+    this.renderer.setDrawingBufferSize(
+      width * window.devicePixelRatio, 
+      height * window.devicePixelRatio, 
+      window.devicePixelRatio
+    )
+    
+    this.renderer.setViewport(0, 0, width, height)
+    
+    if (this.debug) {
+      console.log(`[ThreeJSManager] Canvas resized to: ${width}x${height}`)
+    }
+  }
+
+  /**
+   * @deprecated - Use setupTailwindFriendlyResize instead
+   */
+  resize() {
+    // Keep this method for backward compatibility but don't use the old logic
+    this.updateInternalRenderSize()
   }
 
   init() {
@@ -189,18 +256,27 @@ export default class ThreeJSManager {
 
   dispose() {
     if (this.animationId) cancelAnimationFrame(this.animationId)
-    // No need to remove canvas, Vue manages it
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect()
+      this.resizeObserver = null
+    }
     // TODO: Dispose Three.js objects, listeners, etc.
   }
 
   public initDemoScene() {
     if (!this.threeScene) {
-      const canvas = this['canvas'] || document.getElementById('vr-canvas') as HTMLCanvasElement | null
+      const canvas = this.canvas || document.getElementById('vr-canvas') as HTMLCanvasElement | null
       if (!canvas) return
       const container = canvas.parentElement as HTMLElement
-      this.threeScene = new ThreeScene({ container, canvas, width: container.clientWidth, height: container.clientHeight, background: 0x181c26 })
+      this.threeScene = new ThreeScene({ 
+        container, 
+        canvas, 
+        width: container.clientWidth, 
+        height: container.clientHeight, 
+        background: 0x181c26 
+      })
     }
     this.threeScene.addSpinningCube()
     this.threeScene.start()
   }
-} 
+}

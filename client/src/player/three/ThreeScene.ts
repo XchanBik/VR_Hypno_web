@@ -22,8 +22,12 @@ export class ThreeScene {
 
   constructor(options: ThreeSceneOptions) {
     this.container = options.container
-    const width = options.width || window.innerWidth
-    const height = options.height || window.innerHeight
+    const canvas = options.canvas
+
+    // Get the actual canvas size from CSS/Tailwind
+    const rect = canvas.getBoundingClientRect()
+    const width = rect.width
+    const height = rect.height
 
     // Initialize scene
     this.scene = new THREE.Scene()
@@ -31,87 +35,76 @@ export class ThreeScene {
       this.scene.background = new THREE.Color(options.background)
     }
 
-    // Initialize camera
+    // Initialize camera with actual canvas dimensions
     this.camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000)
     this.camera.position.z = 5
 
-    // Use the provided canvas for the renderer
+    // Create renderer - NEVER let it change canvas size
     this.renderer = new WebGLRenderer({
       antialias: options.antialias ?? true,
-      canvas: options.canvas
+      canvas: canvas
     })
     this.renderer.setPixelRatio(window.devicePixelRatio)
-    this.renderer.setSize(width, height, false)
-    // Do NOT append the canvas again if it's already in the DOM
-    // (Assume it's already present)
-
-    // Handle window resize - use ResizeObserver for better canvas size detection
+    
+    // LOCK the canvas CSS size - Tailwind controls this, not Three.js
+    canvas.style.width = '100%'
+    canvas.style.height = '100%'
+    canvas.removeAttribute('width')
+    canvas.removeAttribute('height')
+    
+    // Set initial internal render size
+    this.updateInternalRenderSize()
+    
+    // Watch for canvas size changes
     this.setupResizeObserver()
   }
 
   private setupResizeObserver() {
     const canvas = this.renderer.domElement
-
-    // Use ResizeObserver to watch for canvas size changes
-    const resizeObserver = new ResizeObserver(entries => {
-      for (const entry of entries) {
-        const { width, height } = entry.contentRect
-
-        // Only update if size actually changed
-        if (width !== this.lastCanvasWidth || height !== this.lastCanvasHeight) {
-          this.lastCanvasWidth = width
-          this.lastCanvasHeight = height
-          this.updateViewport(width, height)
-        }
-      }
+    
+    const resizeObserver = new ResizeObserver(() => {
+      this.updateInternalRenderSize()
     })
-
+    
     resizeObserver.observe(canvas)
-
-    // Fallback for window resize (in case ResizeObserver isn't supported)
-    window.addEventListener('resize', () => {
-      const rect = canvas.getBoundingClientRect()
-      this.updateViewport(rect.width, rect.height)
-    })
   }
 
-  private updateViewport(width: number, height: number) {
+  private updateInternalRenderSize() {
+    const canvas = this.renderer.domElement
+    const rect = canvas.getBoundingClientRect()
+    const width = rect.width
+    const height = rect.height
+    
+    // Skip if no change
+    if (width === this.lastCanvasWidth && height === this.lastCanvasHeight) {
+      return
+    }
+    
+    this.lastCanvasWidth = width
+    this.lastCanvasHeight = height
+    
     // Update camera aspect ratio
     this.camera.aspect = width / height
     this.camera.updateProjectionMatrix()
-
-    // Update renderer size but DON'T change canvas CSS size
-    // The `false` parameter prevents Three.js from setting canvas.style.width/height
-    this.renderer.setSize(width, height, false)
+    
+    // Update internal rendering resolution WITHOUT touching canvas DOM size
+    this.renderer.setDrawingBufferSize(
+      width * window.devicePixelRatio, 
+      height * window.devicePixelRatio, 
+      window.devicePixelRatio
+    )
+    
+    this.renderer.setViewport(0, 0, width, height)
   }
-
-  // Legacy method for backward compatibility
-  protected onWindowResize() {
-    const canvas = this.renderer.domElement
-    const rect = canvas.getBoundingClientRect()
-    this.updateViewport(rect.width, rect.height)
-  }
-
-
 
   protected animate() {
-    // --- Responsive resize: check if canvas size changed ---
-    const canvas = this.renderer.domElement;
-    const width = canvas.clientWidth;
-    const height = canvas.clientHeight;
-    if (width !== this.lastCanvasWidth || height !== this.lastCanvasHeight) {
-      this.camera.aspect = width / height;
-      this.camera.updateProjectionMatrix();
-      this.renderer.setSize(width, height, false);
-      this.lastCanvasWidth = width;
-      this.lastCanvasHeight = height;
-    }
-    // ---
     this.animationFrameId = requestAnimationFrame(this.animate.bind(this))
+    
     if (this.spinningCube) {
       this.spinningCube.rotation.x += 0.01
       this.spinningCube.rotation.y += 0.01
     }
+    
     this.renderer.render(this.scene, this.camera)
   }
 
@@ -130,9 +123,7 @@ export class ThreeScene {
 
   public dispose() {
     this.stop()
-    window.removeEventListener('resize', this.onWindowResize.bind(this))
     this.renderer.dispose()
-    this.container.removeChild(this.renderer.domElement)
   }
 
   public addSpinningCube() {
@@ -141,9 +132,10 @@ export class ThreeScene {
     const material = new THREE.MeshStandardMaterial({ color: 0x4f8cff })
     this.spinningCube = new THREE.Mesh(geometry, material)
     this.scene.add(this.spinningCube)
+    
     // Add a light if not present
     if (!this.scene.children.some(obj => obj.type === 'AmbientLight')) {
       this.scene.add(new THREE.AmbientLight(0xffffff, 1))
     }
   }
-} 
+}

@@ -3,6 +3,7 @@ import { getPlaylist } from '@/apis/playlist'
 import { getSession } from '@/apis/session'
 import { Session } from '@shared/session/types'
 import { MusicIcon, NextIcon, PauseIcon, PlayIcon, PreviousIcon, SettingsIcon, SpeakerIcon, VRIcon } from './icons/svg'
+import ThreeJSManager from './player/three/ThreeJSManager'
 
 const root = document.getElementById('vr-player-root')
 const pathParts = window.location.pathname.split('/')
@@ -16,6 +17,7 @@ let audio: HTMLAudioElement | null = null
 let progressBar: HTMLInputElement | null = null
 let progressTime: HTMLElement | null = null
 let progressDuration: HTMLElement | null = null
+let threeManager: ThreeJSManager | null = null
 
 function getCurrentSession(): Session | null {
     return sessions[currentSessionIndex] || null
@@ -51,8 +53,7 @@ function setupAudioElement() {
         audio.ontimeupdate = updateProgressBar
         audio.onloadedmetadata = updateProgressBar
         audio.onended = () => {
-            isPlaying = false
-            updatePlayPauseButton()
+            nextSession()
         }
     }
     if (progressBar) {
@@ -138,7 +139,13 @@ function renderSessionsList() {
             currentSessionIndex = parseInt((btn as HTMLButtonElement).dataset.index!)
             updateCurrentSession()
             renderSessionsList()
-            loadAndPlayCurrentSong()
+            // Only set up audio, do not play yet!
+            setupAudioElement()
+            const songUid = getCurrentSongUid()
+            if (audio && songUid) {
+                audio.src = getSongStreamUrl(songUid)
+                audio.currentTime = 0
+            }
         })
     })
 }
@@ -190,10 +197,44 @@ async function runVRPlayer(root: HTMLElement, playlistUid: string | null) {
         if (countEl) countEl.textContent = `${sessions.length} session${sessions.length !== 1 ? 's' : ''}`
         renderSessionsList()
         updateCurrentSession()
-        loadAndPlayCurrentSong()
+        // Only set up audio, do not play yet!
+        setupAudioElement()
+        const songUid = getCurrentSongUid()
+        if (audio && songUid) {
+            audio.src = getSongStreamUrl(songUid)
+            audio.currentTime = 0
+        }
     } catch (err: any) {
         const statusDiv = document.getElementById('vr-status')
         if (statusDiv) statusDiv.textContent = 'Failed to load playlist: ' + err.message
+    }
+}
+
+function nextSession() {
+    if (currentSessionIndex < sessions.length - 1) {
+        currentSessionIndex++
+        updateCurrentSession()
+        renderSessionsList()
+        // Only set up audio, do not play yet!
+        setupAudioElement()
+        const songUid = getCurrentSongUid()
+        if (audio && songUid) {
+            audio.src = getSongStreamUrl(songUid)
+            audio.currentTime = 0
+            // Optionally, auto-play if isPlaying is true
+            if (isPlaying) {
+                audio.play()
+            }
+        }
+    } else {
+        // At the end: stop playback
+        if (audio) {
+            audio.pause()
+            audio.currentTime = 0
+        }
+        isPlaying = false
+        updatePlayPauseButton()
+        // Optionally: show a message or reset UI
     }
 }
 
@@ -211,17 +252,18 @@ document.getElementById('previous-btn')?.addEventListener('click', () => {
         currentSessionIndex--
         updateCurrentSession()
         renderSessionsList()
-        loadAndPlayCurrentSong()
+        // Only set up audio, do not play yet!
+        setupAudioElement()
+        const songUid = getCurrentSongUid()
+        if (audio && songUid) {
+            audio.src = getSongStreamUrl(songUid)
+            audio.currentTime = 0
+        }
     }
 })
 
 document.getElementById('next-btn')?.addEventListener('click', () => {
-    if (currentSessionIndex < sessions.length - 1) {
-        currentSessionIndex++
-        updateCurrentSession()
-        renderSessionsList()
-        loadAndPlayCurrentSong()
-    }
+    nextSession()
 })
 
 function setIcons() {
@@ -294,5 +336,14 @@ if (root) {
     setIcons()
     setupVolumeControl()
     renderAudioProgressBar()
+    threeManager = new ThreeJSManager({
+        canvas: document.getElementById('vr-canvas') as HTMLCanvasElement,
+        playlist: null,
+        sessions: [],
+        songs: [],
+        vr: false,
+        debug: false
+    })
+    threeManager.initDemoScene()
     runVRPlayer(root, playlistUid)
 }

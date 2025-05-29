@@ -3,6 +3,8 @@ import * as THREE from 'three'
 import type { PlaylistInfo } from '@shared/playlist/types'
 import type { SessionInfo } from '@shared/session/types'
 import type { SongInfo } from '@shared/song/types'
+import { WebGLRenderer } from 'three'
+import { ThreeScene, ThreeSceneOptions } from './ThreeScene'
 
 interface ThreeJSManagerOptions {
     canvas: HTMLCanvasElement
@@ -34,6 +36,7 @@ export default class ThreeJSManager {
     private debug: boolean
     private frameCount = 0
     private lastFpsTime = performance.now()
+    private threeScene: ThreeScene | null = null
 
   constructor(options: ThreeJSManagerOptions) {
     this.canvas = options.canvas
@@ -116,7 +119,7 @@ export default class ThreeJSManager {
         this.gazeTimer += delta
         // Optionally: add a visual progress indicator
         if (this.gazeTimer >= this.gazeDuration) {
-          this.startSession()
+          this.startSession(this.sessions[0])
         }
       } else {
         this.gazeTimer = 0
@@ -136,17 +139,38 @@ export default class ThreeJSManager {
   }
 
   /**
-   * Placeholder: Called when gaze play is triggered.
+   * Show a waiting scene (e.g., before playback starts)
    */
-  private startSession() {
+  public async showWaitingScene() {
+    // Remove play button if present, reset scene to waiting state
+    if (this.playButton) {
+      this.scene.remove(this.playButton)
+      this.playButton = null
+    }
+    // Optionally add a waiting visual or reset camera
+    // For now, just log
+    console.log('Waiting scene shown')
+  }
+
+  /**
+   * Start a session (show session visuals, etc)
+   */
+  public async startSession(session: SessionInfo) {
     this.isSessionStarted = true
     if (this.playButton) {
       this.scene.remove(this.playButton)
       this.playButton = null
     }
-    // TODO: Start audio, session logic, etc.
-    // For now, just log
-    console.log('Session started!')
+    // TODO: Load session-specific 3D objects, update scene
+    console.log('Session started:', session)
+  }
+
+  /**
+   * Jump to a specific time in the session (for editor mode)
+   */
+  public async jumpToTime(time: number) {
+    // TODO: Update 3D scene to reflect the given time
+    console.log('Jumped to time:', time)
   }
 
   async enterVR() {
@@ -167,5 +191,16 @@ export default class ThreeJSManager {
     if (this.animationId) cancelAnimationFrame(this.animationId)
     // No need to remove canvas, Vue manages it
     // TODO: Dispose Three.js objects, listeners, etc.
+  }
+
+  public initDemoScene() {
+    if (!this.threeScene) {
+      const canvas = this['canvas'] || document.getElementById('vr-canvas') as HTMLCanvasElement | null
+      if (!canvas) return
+      const container = canvas.parentElement as HTMLElement
+      this.threeScene = new ThreeScene({ container, canvas, width: container.clientWidth, height: container.clientHeight, background: 0x181c26 })
+    }
+    this.threeScene.addSpinningCube()
+    this.threeScene.start()
   }
 } 

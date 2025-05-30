@@ -7,6 +7,7 @@ export interface ThreeSceneOptions {
 }
 
 export class ThreeScene {
+  public isVR: boolean = false
   private renderer: WebGLRenderer
   private scene: THREE.Scene
   private camera: THREE.PerspectiveCamera
@@ -42,6 +43,9 @@ export class ThreeScene {
   }
 
   private updateRenderSize() {
+    if (this.isVR) {
+      return
+    }
     const width = this.container.clientWidth
     const height = this.container.clientHeight
     this.renderer.setSize(width, height, false)

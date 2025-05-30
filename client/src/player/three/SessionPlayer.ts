@@ -41,4 +41,13 @@ export default class SessionPlayer {
         }
         return `/api/songs/${this.session.info.song_uid}/stream`
     }
+    
+    public async startThree() {
+        await this.xrManager.initInlineSession()
+        await this.xrManager.startInlineSession()
+    }
+
+    public async startVR() {
+        await this.xrManager.enterVR()
+    }
 }

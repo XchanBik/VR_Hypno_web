@@ -15,6 +15,7 @@ export default class XRManager {
     private inlineSession: XRSession | null = null
 
     constructor(threeScene: ThreeScene) {
+        console.log('XRManager constructor', threeScene)
         this.threeScene = threeScene
         this.renderer = this.threeScene.getRenderer()
         if (!navigator.xr || !this.renderer.xr) {
@@ -33,8 +34,10 @@ export default class XRManager {
     public async startInlineSession() {
         if (this.listener) {
             this.listener.onXRStop()
-        }
+        }        
+        this.threeScene.isVR = false
         this.xrSession = null
+        this.renderer.xr.setReferenceSpaceType('viewer');    
         await this.renderer.xr.setSession(this.inlineSession)
         this.renderer.setAnimationLoop(() => {
             this.threeScene.renderFrame()
@@ -46,13 +49,14 @@ export default class XRManager {
     }
 
     public async enterVR() {
+        console.log('enterVR', this.inlineSession, navigator.xr)
         if (!this.inlineSession || !navigator.xr) {
             throw new Error('XR not initialized. Cannot enter VR.')
-
         }
         if (this.listener) {
             this.listener.onXRPending()
         }
+        this.threeScene.isVR = true
         let session: XRSession | null = null
         try {
             //Can take time in oculus need to put headset on
@@ -69,7 +73,7 @@ export default class XRManager {
         }
 
         //Session handle
-        session.addEventListener('end', this.startInlineSession)
+        session.addEventListener('end', () => this.startInlineSession())
         this.xrSession = session
         await this.renderer.xr.setSession(this.xrSession)
         if (this.listener) {

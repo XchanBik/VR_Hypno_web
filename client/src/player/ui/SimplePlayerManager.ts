@@ -199,6 +199,7 @@ export default class SimplePlayerManager implements XRStateListener {
         this.playPauseIcon.addEventListener('click', () => this.handlePlayPauseClick())
         this.nextIcon.addEventListener('click', () => this.handleNextIconClick())
         this.previousIcon.addEventListener('click', () => this.handlePreviousIconClick())
+        this.vrButton.addEventListener('click', () => this.sessionPlayer!.startVR())
     }
 
     private setSessionsListEvents() {
@@ -236,6 +237,7 @@ export default class SimplePlayerManager implements XRStateListener {
         this.sessionsList.innerHTML = renderSessionsList(this.sessions)
         this.setSessionsListEvents();
         this.refreshCurrentSession();
+        await this.sessionPlayer!.startThree();
     }
 }
 
